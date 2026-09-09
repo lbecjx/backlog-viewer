@@ -1,0 +1,39 @@
+{
+  "name": "local-backlog",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "dev:server": "python3 -m http.server 8001 --directory public/backlog",
+    "test": "vitest run",
+    "build": "tsc -b && vite build",
+    "lint": "oxlint",
+    "preview": "vite preview"
+  },
+  "dependencies": {
+    "@fontsource/cascadia-code": "^5.3.0",
+    "@tailwindcss/vite": "^4.3.3",
+    "dompurify": "^3.4.15",
+    "marked": "^18.0.12",
+    "react": "^19.2.8",
+    "react-dom": "^19.2.8",
+    "shiki": "^4.4.3",
+    "tailwindcss": "^4.3.3"
+  },
+  "devDependencies": {
+    "@tailwindcss/typography": "^0.5.20",
+    "@testing-library/jest-dom": "^7.0.1",
+    "@testing-library/react": "^16.3.3",
+    "@testing-library/user-event": "^14.6.7",
+    "@types/node": "^24.13.3",
+    "@types/react": "^19.2.18",
+    "@types/react-dom": "^19.2.4",
+    "@vitejs/plugin-react": "^6.1.0",
+    "jsdom": "^30.0.1",
+    "oxlint": "^1.79.0",
+    "typescript": "~6.0.2",
+    "vite": "^8.2.2",
+    "vitest": "^5.0.0"
+  }
+}
