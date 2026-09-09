@@ -1,0 +1,87 @@
+import { render, screen } from '@testing-library/react'
+import userEvent from '@testing-library/user-event'
+import { describe, expect, it, vi } from 'vitest'
+import type { BacklogStory } from '../hooks/useBacklogStories'
+import { StoryList } from './StoryList'
+
+// Plain fixtures — this tests UI behavior (search, filter), not the live-discovery
+// mechanism, which is already covered end-to-end in src/lib/discoverStories.test.ts.
+const STORIES: BacklogStory[] = [
+  {
+    code: 'MOCK-0001',
+    title: 'Agregar botón de exportar a CSV',
+    type: 'Story',
+    priority: 'Medium',
+    status: 'Done',
+    labels: ['export', 'ui'],
+    created: '2026-08-01',
+    updated: '2026-08-05',
+    body: 'contenido sobre exportar csv',
+    progress: { done: 3, total: 3 },
+  },
+  {
+    code: 'MOCK-0002',
+    title: 'Migrar autenticación a OAuth2',
+    type: 'Story',
+    priority: 'High',
+    status: 'In Progress',
+    labels: ['auth'],
+    created: '2026-08-10',
+    updated: '2026-08-20',
+    body: 'contenido sobre login social con google',
+    progress: { done: 1, total: 5 },
+  },
+]
+
+describe('StoryList', () => {
+  it('shows every story with no filter applied', () => {
+    render(<StoryList stories={STORIES} selectedCode={null} onSelect={vi.fn()} />)
+    expect(screen.getByText('Agregar botón de exportar a CSV')).toBeInTheDocument()
+    expect(screen.getByText('Migrar autenticación a OAuth2')).toBeInTheDocument()
+  })
+
+  it('filters by search text matching the body, not just the title', async () => {
+    const user = userEvent.setup()
+    render(<StoryList stories={STORIES} selectedCode={null} onSelect={vi.fn()} />)
+
+    await user.type(screen.getByPlaceholderText(/Buscar/i), 'login social')
+
+    expect(screen.queryByText('Agregar botón de exportar a CSV')).not.toBeInTheDocument()
+    expect(screen.getByText('Migrar autenticación a OAuth2')).toBeInTheDocument()
+  })
+
+  it('shows "Sin resultados" when the search matches nothing', async () => {
+    const user = userEvent.setup()
+    render(<StoryList stories={STORIES} selectedCode={null} onSelect={vi.fn()} />)
+
+    await user.type(screen.getByPlaceholderText(/Buscar/i), 'algo que no existe')
+
+    expect(screen.getByText('Sin resultados')).toBeInTheDocument()
+  })
+
+  it('clicking a status chip filters to that status, clicking it again clears the filter', async () => {
+    const user = userEvent.setup()
+    render(<StoryList stories={STORIES} selectedCode={null} onSelect={vi.fn()} />)
+
+    const doneChip = screen.getByRole('button', { name: 'Done' })
+    await user.click(doneChip)
+
+    expect(screen.getByText('Agregar botón de exportar a CSV')).toBeInTheDocument()
+    expect(screen.queryByText('Migrar autenticación a OAuth2')).not.toBeInTheDocument()
+
+    await user.click(doneChip)
+
+    expect(screen.getByText('Agregar botón de exportar a CSV')).toBeInTheDocument()
+    expect(screen.getByText('Migrar autenticación a OAuth2')).toBeInTheDocument()
+  })
+
+  it('calls onSelect with the story code when a card is clicked', async () => {
+    const user = userEvent.setup()
+    const onSelect = vi.fn()
+    render(<StoryList stories={STORIES} selectedCode={null} onSelect={onSelect} />)
+
+    await user.click(screen.getByText('Agregar botón de exportar a CSV'))
+
+    expect(onSelect).toHaveBeenCalledWith('MOCK-0001')
+  })
+})

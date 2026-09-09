@@ -1,0 +1,23 @@
+@import "tailwindcss";
+@plugin "@tailwindcss/typography";
+
+/* Cascadia Code, latin subset only — importing the bare weight files (400.css,
+   etc.) bundles every unicode subset Fontsource ships (arabic, cyrillic, braille...)
+   as separate @font-face rules, and Vite copies every referenced woff/woff2 as a
+   build asset regardless of unicode-range. latin-*.css has no such restriction and
+   covers everything this app's Spanish/English content needs. Same approach as
+   notebooks' packages/ui/src/theme.css. */
+@import '@fontsource/cascadia-code/latin-400.css';
+@import '@fontsource/cascadia-code/latin-600.css';
+
+/* Not registered as --font-mono: that utility is also used by story codes/badges
+   (MOCK-0001, status chips, etc.), which should stay on the default system
+   monospace stack. Cascadia Code is scoped to just the rendered code preview —
+   see the [&_pre]/[&_code] classes on StoryDetail's prose container. */
+@theme {
+  --font-cascadia: "Cascadia Code", ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+}
+
+:root {
+  color-scheme: light dark;
+}
