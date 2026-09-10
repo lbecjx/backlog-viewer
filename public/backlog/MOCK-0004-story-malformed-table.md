@@ -1,9 +1,9 @@
 # MOCK-0004 · Story con tabla de metadata incompleta (a propósito)
 
-| Campo | Valor |
+| Field | Value |
 |---|---|
-| **Código** | MOCK-0004 |
-| **Estado** | Bloqueado por vendor |
+| **Code** | MOCK-0004 |
+| **Status** | Bloqueado por vendor |
 
 ---
 

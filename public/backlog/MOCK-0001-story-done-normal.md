@@ -1,14 +1,14 @@
 # MOCK-0001 · Agregar botón de exportar a CSV
 
-| Campo | Valor |
+| Field | Value |
 |---|---|
-| **Código** | MOCK-0001 |
-| **Tipo** | Story |
-| **Prioridad** | Medium |
-| **Estado** | Done |
+| **Code** | MOCK-0001 |
+| **Type** | Story |
+| **Priority** | Medium |
+| **Status** | Done |
 | **Labels** | export, ui |
-| **Creada** | 2026-08-01 |
-| **Actualizada** | 2026-08-05 |
+| **Created** | 2026-08-01 |
+| **Updated** | 2026-08-05 |
 
 ---
 
