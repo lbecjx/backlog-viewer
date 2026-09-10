@@ -16,6 +16,16 @@
    see the [&_pre]/[&_code] classes on StoryDetail's prose container. */
 @theme {
   --font-cascadia: "Cascadia Code", ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+
+  /* Dracula palette — same theme Shiki uses for fenced code blocks (see
+     lib/highlighter.ts). Named as tokens, not inlined, so the rendered-story
+     prose (StoryDetail) stays visually consistent with the code blocks it
+     surrounds without repeating hex values at every call site. */
+  --color-dracula-purple: #bd93f9;
+  --color-dracula-cyan: #8be9fd;
+  --color-dracula-yellow: #f1fa8c;
+  --color-dracula-green: #50fa7b;
+  --color-dracula-comment: #6272a4;
 }
 
 :root {

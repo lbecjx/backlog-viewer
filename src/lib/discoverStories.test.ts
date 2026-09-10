@@ -7,7 +7,7 @@ import { discoverStories, discoverStoryFilenames, fetchStoryRaw } from './discov
 const BASE_URL = 'http://localhost:8002/'
 
 describe('discoverStoryFilenames', () => {
-  it('finds exactly the 5 mock stories, filtering out anything that is not one', async () => {
+  it('finds exactly the 8 mock stories, filtering out anything that is not one', async () => {
     const filenames = await discoverStoryFilenames(BASE_URL)
     expect(filenames).toEqual([
       'MOCK-0001-story-done-normal.md',
@@ -15,6 +15,9 @@ describe('discoverStoryFilenames', () => {
       'MOCK-0003-story-multiline-lists.md',
       'MOCK-0004-story-malformed-table.md',
       'MOCK-0005-story-code-blocks.md',
+      'MOCK-0006-story-no-labels-done.md',
+      'MOCK-0007-spike-no-user-story.md',
+      'MOCK-0008-bug-many-labels.md',
     ])
   })
 
@@ -38,7 +41,7 @@ describe('fetchStoryRaw', () => {
 describe('discoverStories', () => {
   it('returns filename + raw content pairs for every discovered story', async () => {
     const stories = await discoverStories(BASE_URL)
-    expect(stories).toHaveLength(5)
+    expect(stories).toHaveLength(8)
     const mock1 = stories.find((s) => s.filename === 'MOCK-0001-story-done-normal.md')
     expect(mock1?.raw).toContain('Agregar botón de exportar a CSV')
   })

@@ -9,9 +9,24 @@ interface StoryDetailProps {
 export function StoryDetail({ story }: StoryDetailProps) {
   if (!story) {
     return (
-      <p className="text-neutral-400 dark:text-neutral-500 text-sm p-8 text-center">
-        Seleccioná una story para ver el detalle
-      </p>
+      <div className="h-full flex flex-col items-center justify-center gap-3 text-neutral-400 dark:text-neutral-500">
+        <svg
+          width="40"
+          height="40"
+          viewBox="0 0 24 24"
+          fill="none"
+          role="img"
+          aria-label=""
+          aria-hidden="true"
+          className="opacity-60"
+        >
+          <rect x="3" y="4" width="18" height="16" rx="3" stroke="currentColor" strokeWidth="1.5" />
+          <path d="M7 9h6" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+          <path d="M7 13h10" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+          <path d="M7 17h7" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+        </svg>
+        <p className="text-sm text-center">Selecciona una story para ver el detalle</p>
+      </div>
     )
   }
 
@@ -52,7 +67,7 @@ function StoryBody({ body }: { body: string }) {
     // convention for completed checklist items (Trello, Obsidian, GFM task lists).
     // Scoped to `li:has(checked checkbox)`, not the whole document.
     <div
-      className="prose prose-sm dark:prose-invert max-w-none [&_li:has(>input:checked)]:line-through [&_li:has(>input:checked)]:opacity-60 [&_pre]:font-cascadia [&_code]:font-cascadia"
+      className="prose prose-sm dark:prose-invert max-w-none [&_li:has(>input:checked)]:line-through [&_li:has(>input:checked)]:opacity-60 [&_pre]:font-cascadia [&_code]:font-cascadia dark:prose-headings:text-dracula-purple dark:prose-a:text-dracula-cyan dark:prose-strong:text-dracula-yellow dark:prose-blockquote:text-dracula-comment dark:prose-blockquote:border-dracula-comment dark:prose-code:text-dracula-green"
       dangerouslySetInnerHTML={{ __html: html }}
     />
   )
