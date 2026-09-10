@@ -1,5 +1,5 @@
 # STORY_LOCAL_BACKLOG_VIEWER: reescribir el visor de local-backlog como app React con lectura en vivo
-> Contexto persistente — creado: 2026-09-08 | última actualización: 2026-09-08
+> Contexto persistente — creado: 2026-09-08 | última actualización: 2026-09-10
 > Repo context: [REPO.md](./REPO.md)
 
 ---
@@ -98,6 +98,13 @@ de texto completo.
 ### Decisiones
 | Fecha | Decisión | Quién decidió |
 |-------|----------|---------------|
+| 2026-09-10 | Renombrar el proyecto de "local-backlog (viewer)" a **Backlog Viewer** (`package.json` → `backlog-viewer`) — mismo choque de nombres que ya se había evitado del lado del plugin: este repo y el plugin `local-backlog` no deben compartir nombre aunque uno consuma el build del otro | Luis |
+| 2026-09-10 | Repo publicado en GitHub como [`lbecjx/backlog-viewer`](https://github.com/lbecjx/backlog-viewer), licencia GPL-3.0-or-later, `main` con protección de rama (PR obligatorio, `enforce_admins`, sin force-push/borrado) — mismo esquema que `workflow-dev`/`local-backlog` | Luis |
+| 2026-09-10 | Copyright/atribución: nombre real ("Luis Becerra") en `LICENSE`/`README`/`package.json`; handle (`@lbecjx`) reservado para identidad de GitHub/UI — separación consistente con la declaración de identidad firmada hecha en paralelo en los repos de los plugins | Luis |
+| 2026-09-10 | Nota de copyright por archivo: se evaluó aplicarla a todo `.ts`/`.tsx` (como en los plugins) y se **revirtió** — la guía de GNU está pensada para archivos de cientos de líneas en C, no para componentes React de 10-30 líneas. Única excepción: `index.html`, por pedido explícito | Luis |
+| 2026-09-10 | Versionado de este repo (`0.1.x`) permanece completamente independiente del versionado del plugin `local-backlog` (`1.x`), incluso después del rename | Luis |
+| 2026-09-10 | Colores fuera de la paleta neutra van como tokens `@theme` (`--color-dracula-*`), nunca como hex arbitrario en clases (`text-[#bd93f9]`) — revertido de arbitrary values a tokens tras pedido explícito | Luis |
+| 2026-09-10 | Eliminado el fallback a claves de metadata en español (`Tipo`/`Estado`/etc.) en `parseStory.ts` — el template actual del plugin ya solo genera claves en inglés, y no hay stories reales (fuera de fixtures propias) dependiendo del formato viejo | Luis |
 | 2026-09-07/08 | Build una vez + `dist/` servido con Python, en vez de que el usuario final corra `pnpm dev` — preserva "cero dependencias" del plugin publicado | Luis |
 | 2026-09-07/08 | Lectura en vivo vía el listado HTML autogenerado de `http.server`, sin manifest.json — el listado siempre refleja el disco real, sin paso de generación ni para crear ni para borrar stories | Luis |
 | 2026-09-07/08 | Puerto `0` (auto-asignado por el SO) en vez de uno fijo, para evitar el caso de falla más común ("address already in use") de raíz | Luis |
@@ -172,6 +179,26 @@ de texto completo.
   rewrite, pedir `/backlog/` le hace buscar una subcarpeta `backlog/` que no existe
   (404). Verificado con `curl` tras el fix: los 5 mocks aparecen correctos en el listado.
 
+- **`discoverStories.test.ts` hardcodea el conteo/lista exacta de mocks esperados** —
+  agregar una story mock nueva a `public/backlog/` rompe ese test a propósito (no es un
+  bug del código, es el test haciendo su trabajo). Al sumar 3 mocks nuevas (0006/0007/0008)
+  hubo que actualizar el conteo de 5→8 y la lista completa de filenames esperados.
+- **Mover el repo de carpeta (`mv`) rompe el proceso de Vite corriendo** — el dev server
+  quedó con file watchers apuntando a la ruta vieja tras renombrar
+  `web/local-backlog` → `web/backlog-viewer`; hubo que matar el proceso viejo y levantar
+  uno nuevo desde la ruta correcta. Lección: cualquier `mv`/rename de un repo con un dev
+  server activo requiere reiniciar ese proceso, no asumir que sigue sirviendo bien.
+- **Verificar paletas de terceros contra el archivo fuente real de la dependencia, no de
+  memoria** — antes de aplicar los 5 colores de Dracula al `prose`, se confirmaron los
+  hex exactos leyendo `node_modules/.../@shikijs/themes/dist/dracula.mjs` (la misma
+  dependencia que ya usa `highlighter.ts`), en vez de confiar en el conocimiento general
+  del asistente sobre la paleta.
+- **Tailwind Typography permite recolorear cada elemento del `prose` con modificadores
+  (`prose-headings:`, `prose-a:`, `prose-strong:`, `prose-blockquote:`, `prose-code:`)**
+  — aplicados solo bajo `dark:` porque los colores de Dracula están calibrados para fondo
+  oscuro; en modo claro se pierde contraste, así que se dejó el gris por defecto de
+  Typography en ese modo.
+
 ### No hacer
 - No asumir que el `dist/` de este repo se sirve desde la raíz del proyecto consumidor —
   la ubicación exacta relativa a `backlog/` es una decisión pendiente (ver abajo), no un
@@ -207,13 +234,33 @@ de texto completo.
 ACs #4 y #5 quedan abiertas a propósito — son trabajo del repo del plugin
 (`claude-plugins/local-backlog`), no de esta app React.
 
+### Post-completitud (2026-09-10) — fuera del alcance de los Task Groups originales
+Con la story ya Done (ver arriba), esta sesión hizo una pasada de "hardening/pulido" que
+no estaba en el plan original de TG1-7:
+- Fix real: `parseStory.ts` ya no acepta claves de metadata en español (ver Decisiones)
+- Rename completo del proyecto a "Backlog Viewer" (código + docs + repo GitHub)
+- Publicación real: repo `lbecjx/backlog-viewer`, LICENSE (GPL-3.0-or-later), protección
+  de rama en `main`
+- Footer del sidebar rediseñado: `© 2026 · GPL-3.0 (link a LICENSE) · vX.Y.Z (link al
+  repo) · by @lbecjx (link al perfil)` — iterado varias veces sobre espaciado/simetría
+  vertical con el humano viendo screenshots reales
+- `Logo.tsx` simplificado a solo el wordmark "Backlog Viewer" (sin versión/link — eso se
+  movió al footer para no duplicar información arriba y abajo)
+- Colores Dracula aplicados al `prose` del detalle de story (headings/links/bold/
+  blockquote/código inline), como tokens `@theme`, solo en `dark:`
+- Empty-state de `StoryDetail` (sin story seleccionada): ícono + texto centrados vertical
+  y horizontalmente en el panel principal
+- 3 mocks nuevas (`MOCK-0006/0007/0008`) cubriendo casos no probados antes: sin Labels,
+  sin sección User Story (Spike), y muchos Labels (wrap visual)
+
+Todo esto vive en el PR [`lbecjx/backlog-viewer#1`](https://github.com/lbecjx/backlog-viewer/pull/1),
+sin mergear a `main` todavía al momento de este guardado.
+
 ### Siguiente paso
-Ninguno más en este repo por ahora. Lo que sigue (ACs #4/#5) es: inicializar el repo
-del plugin `claude-plugins/local-backlog`, escribir/actualizar `open-local-backlog`
-para servir el `dist/` de esta app (con los chequeos de `python3`/puerto), y decidir
-cómo se sincroniza el build de acá para allá (ver versionado en Decisiones).
-(distinto de la verificación visual ya hecha en TG6, que probó carga inicial/búsqueda/
-filtro/dark mode pero no el ciclo completo de edición en vivo).
+Nada pendiente en el alcance original de esta story (ACs #4/#5 siguen siendo trabajo del
+OTRO repo, `claude-plugins/local-backlog` — ver abajo). Del lado de este repo, lo único
+abierto es mergear el PR #1 de arriba y, después, reconstruir+copiar el `dist/` al
+plugin (su propia rama `fix/dist-rebuild` quedó desactualizada respecto a este pulido).
 
 **Preguntas abiertas para el humano — actualizado 2026-09-08:**
 1. ~~¿Dónde vive exactamente el `dist/` servido respecto a `backlog/`?~~ Resuelto en
@@ -382,5 +429,20 @@ correctamente, fetch individual de un `.md` trae el contenido crudo)
 | `src/App.tsx`, `src/index.css` | modificado | Reemplazo del demo del scaffold; dark mode; `@tailwindcss/typography` |
 | `tsconfig.app.json` | modificado | `include` agrega `vitest.setup.ts` (fix de tipos de jest-dom en `tsc -b`) |
 | `package.json` | modificado | + `@testing-library/*`, `@tailwindcss/typography` |
+| `src/lib/parseStory.ts` (+test) | modificado | Eliminado el fallback a claves en español; `field()` ahora toma un solo `key` |
+| `public/backlog/MOCK-000{1..5}-*.md` | modificado | Tablas de metadata migradas a claves en inglés (`Field/Value`, `Code/Type/...`) — el body en español queda igual |
+| `src/lib/discoverStories.test.ts` | modificado | Conteo/lista esperada 5→8 tras sumar las 3 mocks nuevas |
+| `public/backlog/MOCK-0006-story-no-labels-done.md` | nuevo | Caso: sin `Labels` en la tabla |
+| `public/backlog/MOCK-0007-spike-no-user-story.md` | nuevo | Caso: `Type: Spike` sin sección User Story |
+| `public/backlog/MOCK-0008-bug-many-labels.md` | nuevo | Caso: 6 labels, prueba wrap visual |
+| `package.json`, `index.html` | modificado | Rename `local-backlog`→`backlog-viewer` / título `Backlog Viewer`; + `"license": "GPL-3.0-or-later"`; `index.html` además lleva su propia nota de copyright (única excepción del repo) |
+| `README.md` | modificado | Título, sección License (bloque GPL completo + Copyright + Author), "Recommended alongside" reformulado sin nombrar Jira |
+| `LICENSE` | nuevo | Texto completo GPL-3.0 |
+| `CHANGELOG.md` | nuevo | Entradas 0.1.0 / 0.1.1 |
+| `src/components/Logo.tsx` | modificado | Simplificado a solo wordmark "Backlog Viewer" — versión/autor se movieron al footer |
+| `src/App.tsx` | modificado | Footer nuevo (© / licencia con link a LICENSE / versión con link al repo / autor con link al perfil), `aside` separa `pt`/`px` de `pb` para poder controlar el padding del footer de forma independiente |
+| `src/components/StoryDetail.tsx` | modificado | Empty-state con ícono SVG + texto centrados (`flex flex-col items-center justify-center`, `h-full`); texto sin tilde ("Selecciona" en vez de "Seleccioná"); clases `prose-*` con colores Dracula en `dark:` |
+| `src/index.css` | modificado | Tokens `--color-dracula-{purple,cyan,yellow,green,comment}` en `@theme`, verificados contra `@shikijs/themes/dracula.mjs` real antes de usarlos |
+| `.gitignore`, repo GitHub | nuevo | Repo creado (`gh repo create lbecjx/backlog-viewer --public`), rama `main` protegida vía API de GitHub |
 
 ---
