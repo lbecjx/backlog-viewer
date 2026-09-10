@@ -2,7 +2,7 @@
 
 ![Backlog Viewer screenshot](docs/assets/screenshot.png)
 
-Development source for the viewer used by the `local-backlog` Claude Code plugin. This
+Development source for the viewer used by the [`local-backlog`](https://github.com/lbecjx/local-backlog) Claude Code plugin. This
 repo is never installed by anyone — only its compiled `dist/` output ships inside the
 plugin. See `docs/STORY_LOCAL_BACKLOG_VIEWER.md` for the full design and rationale.
 
