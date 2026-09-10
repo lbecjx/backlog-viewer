@@ -61,9 +61,39 @@ describe('parseStory', () => {
     expect(story.updated).toBeUndefined()
   })
 
-  it('falls back to the filename code when the table has no Código row at all', () => {
-    const raw = '# Sin tabla\n\n---\n\n## Descripción\nsin metadata'
-    const story = parseStory(raw, 'NB-0007-sin-tabla.md')
+  it('falls back to the filename code when the table has no Code row at all', () => {
+    const raw = '# No table\n\n---\n\n## Description\nno metadata'
+    const story = parseStory(raw, 'NB-0007-no-table.md')
     expect(story.code).toBe('NB-0007')
+  })
+
+  it('parses a story written with the current template keys', () => {
+    const raw = [
+      '# NB-0009 · English template smoke test',
+      '',
+      '| Field | Value |',
+      '|---|---|',
+      '| **Code** | NB-0009 |',
+      '| **Type** | Bug |',
+      '| **Priority** | High |',
+      '| **Status** | In Progress |',
+      '| **Labels** | a, b |',
+      '| **Created** | 2026-09-01 |',
+      '| **Updated** | 2026-09-02 |',
+      '',
+      '---',
+      '',
+      '## Description',
+      'English body.',
+    ].join('\n')
+    const story = parseStory(raw, 'NB-0009-english-template.md')
+
+    expect(story.code).toBe('NB-0009')
+    expect(story.type).toBe('Bug')
+    expect(story.priority).toBe('High')
+    expect(story.status).toBe('In Progress')
+    expect(story.labels).toEqual(['a', 'b'])
+    expect(story.created).toBe('2026-09-01')
+    expect(story.updated).toBe('2026-09-02')
   })
 })

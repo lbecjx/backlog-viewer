@@ -1,14 +1,14 @@
 # MOCK-0003 · Rediseñar el flujo de checkout
 
-| Campo | Valor |
+| Field | Value |
 |---|---|
-| **Código** | MOCK-0003 |
-| **Tipo** | Story |
-| **Prioridad** | High |
-| **Estado** | Not Started |
+| **Code** | MOCK-0003 |
+| **Type** | Story |
+| **Priority** | High |
+| **Status** | Not Started |
 | **Labels** | checkout, ui, conversion |
-| **Creada** | 2026-08-15 |
-| **Actualizada** | 2026-08-15 |
+| **Created** | 2026-08-15 |
+| **Updated** | 2026-08-15 |
 
 ---
 

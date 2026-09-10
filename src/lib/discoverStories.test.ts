@@ -27,7 +27,7 @@ describe('fetchStoryRaw', () => {
   it('fetches the real raw content of a specific story', async () => {
     const raw = await fetchStoryRaw(BASE_URL, 'MOCK-0001-story-done-normal.md')
     expect(raw).toContain('# MOCK-0001 · Agregar botón de exportar a CSV')
-    expect(raw).toContain('**Estado** | Done')
+    expect(raw).toContain('**Status** | Done')
   })
 
   it('throws when the file does not exist', async () => {

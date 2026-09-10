@@ -1,14 +1,14 @@
 # MOCK-0002 · Migrar autenticación a OAuth2
 
-| Campo | Valor |
+| Field | Value |
 |---|---|
-| **Código** | MOCK-0002 |
-| **Tipo** | Story |
-| **Prioridad** | High |
-| **Estado** | In Progress |
+| **Code** | MOCK-0002 |
+| **Type** | Story |
+| **Priority** | High |
+| **Status** | In Progress |
 | **Labels** | auth, backend, security |
-| **Creada** | 2026-08-10 |
-| **Actualizada** | 2026-08-20 |
+| **Created** | 2026-08-10 |
+| **Updated** | 2026-08-20 |
 
 ---
 

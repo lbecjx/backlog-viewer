@@ -1,14 +1,14 @@
 # MOCK-0005 · Cachear respuestas de la API de precios
 
-| Campo | Valor |
+| Field | Value |
 |---|---|
-| **Código** | MOCK-0005 |
-| **Tipo** | Bug |
-| **Prioridad** | Low |
-| **Estado** | Not Started |
+| **Code** | MOCK-0005 |
+| **Type** | Bug |
+| **Priority** | Low |
+| **Status** | Not Started |
 | **Labels** | performance, api, cache, backend |
-| **Creada** | 2026-08-22 |
-| **Actualizada** | 2026-08-22 |
+| **Created** | 2026-08-22 |
+| **Updated** | 2026-08-22 |
 
 ---
 
