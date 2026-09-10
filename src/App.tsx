@@ -28,11 +28,40 @@ export default function App() {
 
   return (
     <div className="grid grid-cols-[360px_1fr] h-screen bg-white dark:bg-neutral-900">
-      <aside className="border-r border-neutral-200 dark:border-neutral-800 p-4 overflow-hidden flex flex-col h-full">
+      <aside className="border-r border-neutral-200 dark:border-neutral-800 pt-4 px-4 overflow-hidden flex flex-col h-full">
         <Logo />
         <div className="flex-1 min-h-0">
           <StoryList stories={stories} selectedCode={selectedCode} onSelect={setSelectedCode} />
         </div>
+        <p className="mt-2 py-2 border-t border-neutral-200 dark:border-neutral-800 text-[10px] text-neutral-400 dark:text-neutral-600 text-center">
+          © 2026 ·{' '}
+          <a
+            href="https://github.com/lbecjx/backlog-viewer/blob/main/LICENSE"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="hover:text-indigo-600 dark:hover:text-indigo-400 hover:underline"
+          >
+            GPL-3.0
+          </a>{' '}
+          ·{' '}
+          <a
+            href="https://github.com/lbecjx/backlog-viewer"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="hover:text-indigo-600 dark:hover:text-indigo-400 hover:underline"
+          >
+            v{__APP_VERSION__}
+          </a>{' '}
+          by{' '}
+          <a
+            href="https://github.com/lbecjx"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="hover:text-indigo-600 dark:hover:text-indigo-400 hover:underline"
+          >
+            @lbecjx
+          </a>
+        </p>
       </aside>
       <main className="overflow-hidden">
         <StoryDetail story={selected} />

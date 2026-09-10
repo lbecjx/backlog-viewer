@@ -1,6 +1,8 @@
-# local-backlog (viewer)
+# Backlog Viewer
 
-Development source for the viewer used by the `local-backlog` Claude Code plugin. This
+![Backlog Viewer screenshot](docs/assets/screenshot.png)
+
+Development source for the viewer used by the [`local-backlog`](https://github.com/lbecjx/local-backlog) Claude Code plugin. This
 repo is never installed by anyone — only its compiled `dist/` output ships inside the
 plugin. See `docs/STORY_LOCAL_BACKLOG_VIEWER.md` for the full design and rationale.
 
@@ -26,3 +28,27 @@ mechanism in action; no build or regeneration step required.
 
 React + TypeScript + Vite + Tailwind CSS v4, managed with pnpm. See
 `.workflow-dev/context/REPO.md` for the full stack rationale and conventions.
+
+## License
+
+Licensed under the GNU General Public License v3.0 or later — see [LICENSE](./LICENSE) for the full text.
+
+```
+Backlog Viewer — a Markdown story viewer for the local-backlog plugin
+Copyright (C) 2026  lbecjx
+
+This program is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program. If not, see <https://www.gnu.org/licenses/>.
+```
+
+Author: lbecjx ([@lbecjx](https://github.com/lbecjx))
