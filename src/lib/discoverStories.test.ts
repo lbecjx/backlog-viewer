@@ -2,8 +2,9 @@ import { describe, expect, it } from 'vitest'
 import { discoverStories, discoverStoryFilenames, fetchStoryRaw } from './discoverStories'
 
 // Talks to the real `python3 -m http.server` instance spawned by
-// vitest.global-setup.ts (port 8002) against public/backlog/ — no mocked fetch.
-// This is the actual mechanism the app uses in production, exercised for real.
+// vitest.global-setup.ts (port 8002) against test-fixtures/backlog/ — no
+// mocked fetch. This is the actual mechanism the app uses in production,
+// exercised for real.
 const BASE_URL = 'http://localhost:8002/'
 
 describe('discoverStoryFilenames', () => {

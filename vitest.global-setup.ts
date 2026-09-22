@@ -8,7 +8,7 @@ const TEST_SERVER_PORT = 8002
 let server: ChildProcess | undefined
 
 export async function setup() {
-  server = spawn('python3', ['-m', 'http.server', String(TEST_SERVER_PORT), '--directory', 'public/backlog'], {
+  server = spawn('python3', ['-m', 'http.server', String(TEST_SERVER_PORT), '--directory', 'test-fixtures/backlog'], {
     stdio: 'ignore',
   })
   await new Promise<void>((resolve, reject) => {

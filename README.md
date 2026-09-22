@@ -13,16 +13,18 @@ dev server doesn't generate one, so local development needs a second process sta
 in for the `python3 -m http.server` the published plugin uses in production:
 
 ```bash
-# Terminal 1 — serves public/backlog/ with a real, auto-generated directory listing
+# Terminal 1 — serves test-fixtures/backlog/ with a real, auto-generated directory listing
 pnpm dev:server
 
 # Terminal 2 — the app itself; proxies /backlog/* to the server above (see vite.config.ts)
 pnpm dev
 ```
 
-Both need to be running. `public/backlog/` holds mock stories (`MOCK-000X-*.md`) used
-for development — edit, add, or delete them and refresh the browser to see the live-read
-mechanism in action; no build or regeneration step required.
+Both need to be running. `test-fixtures/backlog/` holds mock stories (`MOCK-000X-*.md`)
+used for development — edit, add, or delete them and refresh the browser to see the
+live-read mechanism in action; no build or regeneration step required. It's kept out of
+`public/`, whose contents ship verbatim in the built app, so these fixtures never leak
+into a real distributed build.
 
 ## Stack
 

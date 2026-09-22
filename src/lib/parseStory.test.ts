@@ -4,7 +4,7 @@ import { fetchStoryRaw } from './discoverStories'
 
 // Reads the real mock files from disk (via the same live server as
 // discoverStories.test.ts) instead of inlining copies of their content —
-// keeps this test honest against what actually ships in public/backlog/.
+// keeps this test honest against what's actually in test-fixtures/backlog/.
 const BASE_URL = 'http://localhost:8002/'
 
 describe('extractCodeFromFilename', () => {

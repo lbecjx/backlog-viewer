@@ -6,7 +6,7 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "dev:server": "python3 -m http.server 8001 --directory public/backlog",
+    "dev:server": "python3 -m http.server 8001 --directory test-fixtures/backlog",
     "test": "vitest run",
     "build": "tsc -b && vite build",
     "lint": "oxlint",
