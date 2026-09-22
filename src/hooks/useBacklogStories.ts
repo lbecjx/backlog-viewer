@@ -1,7 +1,10 @@
 import { useEffect, useState } from 'react'
+import { fetchBacklogStatuses } from '../lib/backlogConfig'
 import { computeAcProgress, type AcProgress } from '../lib/computeAcProgress'
 import { discoverStories } from '../lib/discoverStories'
 import { parseStory, type ParsedStory } from '../lib/parseStory'
+import { sortStoriesNewestFirst } from '../lib/sortStories'
+import { configureStatusColors, loadStatusPalette } from '../lib/statusColor'
 
 export interface BacklogStory extends ParsedStory {
   progress: AcProgress | null
@@ -28,15 +31,28 @@ export function useBacklogStories(): UseBacklogStoriesResult {
 
   useEffect(() => {
     let cancelled = false
+    const baseUrl = getBacklogBaseUrl()
 
-    discoverStories(getBacklogBaseUrl())
+    // Both resolve before stories render with them — a project with neither
+    // file gets configureStatusColors's own defaults (both calls resolve to
+    // "nothing found" rather than rejecting; see backlogConfig.ts and
+    // statusColor.ts).
+    Promise.all([loadStatusPalette(), fetchBacklogStatuses(baseUrl)])
+      .then(([palette, statuses]) => {
+        if (cancelled) return
+        configureStatusColors(palette, statuses.statuses)
+      })
+      .then(() => discoverStories(baseUrl))
       .then((discovered) => {
         if (cancelled) return
         const parsed = discovered.map(({ filename, raw }) => {
           const story = parseStory(raw, filename)
           return { ...story, progress: computeAcProgress(story.body) }
         })
-        setStories(parsed)
+        // Sorted here (display concern), independent of whatever order
+        // discoverStories itself returns filenames in — that function's own
+        // job is just finding what exists, not deciding how it's shown.
+        setStories(sortStoriesNewestFirst(parsed))
       })
       .catch((err: unknown) => {
         if (cancelled) return
