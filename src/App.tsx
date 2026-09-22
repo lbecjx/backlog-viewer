@@ -11,7 +11,7 @@ export default function App() {
   if (loading) {
     return (
       <p className="p-8 text-center text-neutral-400 dark:bg-neutral-900 dark:text-neutral-500 min-h-screen">
-        Cargando backlog...
+        Loading backlog...
       </p>
     )
   }
@@ -19,7 +19,7 @@ export default function App() {
   if (error) {
     return (
       <p className="p-8 text-center text-red-600 dark:bg-neutral-900 dark:text-red-400 min-h-screen">
-        Error al leer el backlog: {error}
+        Error reading the backlog: {error}
       </p>
     )
   }

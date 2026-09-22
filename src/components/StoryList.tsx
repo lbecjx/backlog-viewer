@@ -34,7 +34,7 @@ export function StoryList({ stories, selectedCode, onSelect }: StoryListProps) {
     <div className="flex flex-col gap-3 h-full">
       <input
         type="search"
-        placeholder="Buscar por código, título o contenido..."
+        placeholder="Search by code, title, or content..."
         value={query}
         onChange={(e) => setQuery(e.target.value)}
         className="px-3 py-2 rounded-lg border border-neutral-300 text-sm bg-white text-neutral-900 placeholder:text-neutral-400 dark:bg-neutral-900 dark:border-neutral-700 dark:text-neutral-100 dark:placeholder:text-neutral-500"
@@ -63,7 +63,7 @@ export function StoryList({ stories, selectedCode, onSelect }: StoryListProps) {
           />
         ))}
         {filtered.length === 0 && (
-          <p className="text-sm text-neutral-400 dark:text-neutral-500 text-center py-8">Sin resultados</p>
+          <p className="text-sm text-neutral-400 dark:text-neutral-500 text-center py-8">No results</p>
         )}
       </div>
     </div>
