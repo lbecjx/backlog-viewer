@@ -13,9 +13,26 @@ const FRIENDLY_FORMAT = new Intl.DateTimeFormat(undefined, {
   timeStyle: 'short',
 })
 
+const ISO_DATE_PREFIX = /^(\d{4})-(\d{2})-(\d{2})T/
+
 export function formatFriendlyDateTime(isoUtc: string): string {
   const date = new Date(isoUtc)
   if (Number.isNaN(date.getTime())) return isoUtc // Malformed input: show it verbatim rather than "Invalid Date".
+  // Number.isNaN alone doesn't catch an out-of-range day: the native parser
+  // silently normalizes it (e.g. "2026-02-30" -> Mar 2) instead of failing,
+  // so a typo renders as a different, wrong-but-plausible date instead of
+  // the verbatim fallback this function's whole point is to provide.
+  // Round-trip the UTC components the string itself specified against what
+  // the parser actually produced.
+  const match = ISO_DATE_PREFIX.exec(isoUtc)
+  if (
+    match &&
+    (date.getUTCFullYear() !== Number(match[1]) ||
+      date.getUTCMonth() !== Number(match[2]) - 1 ||
+      date.getUTCDate() !== Number(match[3]))
+  ) {
+    return isoUtc
+  }
   return FRIENDLY_FORMAT.format(date)
 }
 
@@ -38,6 +55,17 @@ export function formatFriendlyDate(isoDate: string): string {
   if (!match) return isoDate
   const [, year, month, day] = match
   const date = new Date(Number(year), Number(month) - 1, Number(day))
+  // Same silent-normalization gap as formatFriendlyDateTime: new Date(y, m, d)
+  // never errors on an out-of-range day (e.g. Feb 30 -> Mar 2), it just
+  // returns a different, valid-looking date. Round-trip the constructed
+  // date's own components against what was actually asked for.
+  if (
+    date.getFullYear() !== Number(year) ||
+    date.getMonth() !== Number(month) - 1 ||
+    date.getDate() !== Number(day)
+  ) {
+    return isoDate
+  }
   return FRIENDLY_DATE_FORMAT.format(date)
 }
 

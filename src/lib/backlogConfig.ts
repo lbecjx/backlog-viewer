@@ -45,6 +45,19 @@ export async function fetchBacklogStatuses(baseUrl: string): Promise<BacklogStat
     if (!res.ok) return {}
     const parsed: unknown = await res.json()
     if (typeof parsed !== 'object' || parsed === null) return {}
+    const { statuses } = parsed as { statuses?: unknown }
+    // `typeof === 'object'` alone doesn't guarantee `statuses` is the shape
+    // configureStatusColors iterates and destructures — a present-but-wrong-
+    // shaped value (not an array, or an array with a null/non-object entry)
+    // would otherwise reach a `for (const {name, color} of statuses)` there
+    // and throw, taking down the whole app for what should be a recoverable
+    // typo (the same "malformed config is not an error" promise as
+    // everywhere else in this file). Treat it exactly like an absent file.
+    if (statuses !== undefined) {
+      const isValidEntry = (entry: unknown): boolean =>
+        typeof entry === 'object' && entry !== null && 'name' in entry && 'color' in entry
+      if (!Array.isArray(statuses) || !statuses.every(isValidEntry)) return {}
+    }
     return parsed as BacklogStatuses
   } catch {
     return {}

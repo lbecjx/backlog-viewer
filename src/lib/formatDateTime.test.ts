@@ -13,6 +13,16 @@ describe('formatFriendlyDateTime', () => {
   it('returns the input verbatim for a malformed datetime, not "Invalid Date"', () => {
     expect(formatFriendlyDateTime('not-a-date')).toBe('not-a-date')
   })
+
+  it('returns the input verbatim for an out-of-range day, not a silently-shifted date', () => {
+    // A regression test for a real bug: `new Date(...)` never errors on a
+    // day that doesn't exist in that month (2026 isn't a leap year, so Feb
+    // has 29 days) — it normalizes forward to a different, wrong-looking-
+    // plausible date instead. Number.isNaN(date.getTime()) alone can't catch
+    // this since the resulting Date is genuinely valid, just not the one
+    // the string asked for.
+    expect(formatFriendlyDateTime('2026-02-30T10:00:00Z')).toBe('2026-02-30T10:00:00Z')
+  })
 })
 
 describe('formatFriendlyDate', () => {
@@ -35,6 +45,13 @@ describe('formatFriendlyDate', () => {
 
   it('returns the input verbatim for a malformed date', () => {
     expect(formatFriendlyDate('not-a-date')).toBe('not-a-date')
+  })
+
+  it('returns the input verbatim for an out-of-range day, not a silently-shifted date', () => {
+    // Same class of bug as formatFriendlyDateTime's equivalent test — the
+    // local-time constructor also normalizes an impossible day forward
+    // instead of erroring.
+    expect(formatFriendlyDate('2026-02-30')).toBe('2026-02-30')
   })
 })
 
