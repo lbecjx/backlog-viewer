@@ -26,6 +26,49 @@ export async function fetchBacklogConfig(baseUrl: string): Promise<BacklogConfig
   }
 }
 
+export interface ArchiveEntry {
+  code: string
+  resolution: string
+  reason: string
+}
+
+export interface BoardMembership {
+  planner: string[]
+  archive: ArchiveEntry[]
+}
+
+// Same fetch-and-tolerate-absence shape as the two functions above. A
+// project with no `.backlog-board.json` (or one that fails to parse) means
+// every story is in the Backlog — computeZone treats an absent/empty list
+// exactly like "not a member of it."
+export async function fetchBoardMembership(baseUrl: string): Promise<BoardMembership> {
+  const empty: BoardMembership = { planner: [], archive: [] }
+  try {
+    const res = await fetch(new URL('.backlog-board.json', baseUrl), { cache: 'no-store' })
+    if (!res.ok) return empty
+    const parsed: unknown = await res.json()
+    if (typeof parsed !== 'object' || parsed === null) return empty
+    const { planner, archive } = parsed as { planner?: unknown; archive?: unknown }
+    const isValidArchiveEntry = (entry: unknown): entry is ArchiveEntry => {
+      if (typeof entry !== 'object' || entry === null) return false
+      const { code, resolution, reason } = entry as Record<string, unknown>
+      return typeof code === 'string' && typeof resolution === 'string' && typeof reason === 'string'
+    }
+    // Filtering out only the bad entries, not gating the whole array on
+    // `.every()`: one corrupted entry (a partial write, a hand-edit typo)
+    // shouldn't erase every other story's real membership along with it —
+    // for `archive` specifically, that would silently put an
+    // already-archived story back in the visible Backlog list, the exact
+    // thing this file exists to prevent (found via adversarial review).
+    return {
+      planner: Array.isArray(planner) ? planner.filter((c): c is string => typeof c === 'string') : [],
+      archive: Array.isArray(archive) ? archive.filter(isValidArchiveEntry) : [],
+    }
+  } catch {
+    return empty
+  }
+}
+
 export interface StatusConfigEntry {
   name: string
   color: string

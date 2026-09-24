@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it, vi } from 'vitest'
-import { fetchBacklogConfig, fetchBacklogStatuses } from './backlogConfig'
+import { fetchBacklogConfig, fetchBacklogStatuses, fetchBoardMembership } from './backlogConfig'
 
 // Real http.server instance, same as discoverStories.test.ts — see that
 // file's comment for why this isn't a mocked fetch.
@@ -58,5 +58,68 @@ describe('fetchBacklogStatuses', () => {
         expect(await fetchBacklogStatuses('http://ignored/')).toEqual({})
       },
     )
+  })
+})
+
+describe('fetchBoardMembership', () => {
+  it('fetches and parses the real .backlog-board.json', async () => {
+    const membership = await fetchBoardMembership(BASE_URL)
+    expect(membership).toEqual({
+      planner: ['MOCK-0002'],
+      archive: [{ code: 'MOCK-0001', resolution: 'Done', reason: '' }],
+    })
+  })
+
+  it('returns empty lists, not a rejection, when the file does not exist', async () => {
+    const membership = await fetchBoardMembership('http://localhost:8002/nope/')
+    expect(membership).toEqual({ planner: [], archive: [] })
+  })
+
+  // Same documented exception as fetchBacklogStatuses above — a malformed
+  // shape can't be exercised through the one shared real-server fixture.
+  describe('with a malformed shape (mocked fetch)', () => {
+    afterEach(() => {
+      vi.unstubAllGlobals()
+    })
+
+    it.each([
+      ['planner is not an array', { planner: 'MOCK-0001', archive: [] }],
+      ['planner has a non-string entry', { planner: [123], archive: [] }],
+      ['archive is not an array', { planner: [], archive: {} }],
+      ['archive has an entry with no code', { planner: [], archive: [{ resolution: 'Done', reason: '' }] }],
+      ['archive has an entry with a non-string code', { planner: [], archive: [{ code: 123 }] }],
+      ['archive has an entry with no resolution', { planner: [], archive: [{ code: 'MOCK-0001', reason: '' }] }],
+      ['archive has an entry with no reason', { planner: [], archive: [{ code: 'MOCK-0001', resolution: 'Done' }] }],
+    ])('falls back to empty lists, not a value computeZone would misread, when %s', async (_label, body) => {
+      vi.stubGlobal('fetch', vi.fn().mockResolvedValue({ ok: true, json: () => Promise.resolve(body) }))
+      expect(await fetchBoardMembership('http://ignored/')).toEqual({ planner: [], archive: [] })
+    })
+
+    it('keeps a valid entry even when a sibling entry in the same array is malformed', async () => {
+      // Regression test for a real bug found by adversarial review: the
+      // previous implementation gated each whole array on `.every()`, so
+      // one corrupted entry (a partial write, a hand-edit typo) silently
+      // discarded every OTHER story's real membership too — for `archive`,
+      // that meant an already-archived story reappearing in the visible
+      // Backlog list.
+      vi.stubGlobal(
+        'fetch',
+        vi.fn().mockResolvedValue({
+          ok: true,
+          json: () =>
+            Promise.resolve({
+              planner: ['MOCK-0001', 123],
+              archive: [
+                { code: 'MOCK-0002', resolution: 'Done', reason: '' },
+                { resolution: 'Cancelled' }, // missing code — malformed
+              ],
+            }),
+        }),
+      )
+      expect(await fetchBoardMembership('http://ignored/')).toEqual({
+        planner: ['MOCK-0001'],
+        archive: [{ code: 'MOCK-0002', resolution: 'Done', reason: '' }],
+      })
+    })
   })
 })

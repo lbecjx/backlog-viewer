@@ -24,14 +24,19 @@ export default function App() {
     )
   }
 
-  const selected = stories.find((s) => s.code === selectedCode) ?? null
+  // Only the Backlog zone renders here for now — Planner/Archive get their
+  // own views in later task groups. Filtering once and reusing it for both
+  // the list and the selection lookup keeps them in sync: a story can't be
+  // "selected" if it's not in the list that could have selected it.
+  const backlogStories = stories.filter((s) => s.zone === 'backlog')
+  const selected = backlogStories.find((s) => s.code === selectedCode) ?? null
 
   return (
     <div className="grid grid-cols-[360px_1fr] h-screen bg-white dark:bg-neutral-900">
       <aside className="border-r border-neutral-200 dark:border-neutral-800 pt-4 px-4 overflow-hidden flex flex-col h-full">
         <Logo />
         <div className="flex-1 min-h-0">
-          <StoryList stories={stories} selectedCode={selectedCode} onSelect={setSelectedCode} />
+          <StoryList stories={backlogStories} selectedCode={selectedCode} onSelect={setSelectedCode} />
         </div>
         <p className="mt-2 py-2 border-t border-neutral-200 dark:border-neutral-800 text-[10px] text-neutral-400 dark:text-neutral-600 text-center">
           © 2026 ·{' '}

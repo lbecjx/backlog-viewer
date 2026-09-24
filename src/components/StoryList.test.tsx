@@ -18,6 +18,7 @@ const STORIES: BacklogStory[] = [
     updated: '2026-08-05',
     body: 'contenido sobre exportar csv',
     progress: { done: 3, total: 3 },
+    zone: 'backlog',
   },
   {
     code: 'MOCK-0002',
@@ -30,6 +31,7 @@ const STORIES: BacklogStory[] = [
     updated: '2026-08-20',
     body: 'contenido sobre login social con google',
     progress: { done: 1, total: 5 },
+    zone: 'backlog',
   },
 ]
 
