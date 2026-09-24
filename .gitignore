@@ -16,6 +16,11 @@ dist-ssr
 # gitignored per this project's own choice, see local-backlog/.backlog-config.json
 local-backlog/
 
+# workflow-dev's own persistent context — private, per-machine, regenerable
+# agent working memory, gitignored per this project's own choice, see
+# .workflow-dev/config.json
+.workflow-dev/
+
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json
