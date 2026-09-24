@@ -12,6 +12,10 @@ dist
 dist-ssr
 *.local
 
+# local-backlog plugin files (https://github.com/lbecjx/local-backlog) —
+# gitignored per this project's own choice, see local-backlog/.backlog-config.json
+local-backlog/
+
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json
