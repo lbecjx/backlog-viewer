@@ -44,19 +44,19 @@ describe('StoryList', () => {
     const user = userEvent.setup()
     render(<StoryList stories={STORIES} selectedCode={null} onSelect={vi.fn()} />)
 
-    await user.type(screen.getByPlaceholderText(/Buscar/i), 'login social')
+    await user.type(screen.getByPlaceholderText(/Search/i), 'login social')
 
     expect(screen.queryByText('Agregar botón de exportar a CSV')).not.toBeInTheDocument()
     expect(screen.getByText('Migrar autenticación a OAuth2')).toBeInTheDocument()
   })
 
-  it('shows "Sin resultados" when the search matches nothing', async () => {
+  it('shows "No results" when the search matches nothing', async () => {
     const user = userEvent.setup()
     render(<StoryList stories={STORIES} selectedCode={null} onSelect={vi.fn()} />)
 
-    await user.type(screen.getByPlaceholderText(/Buscar/i), 'algo que no existe')
+    await user.type(screen.getByPlaceholderText(/Search/i), 'something that does not exist')
 
-    expect(screen.getByText('Sin resultados')).toBeInTheDocument()
+    expect(screen.getByText('No results')).toBeInTheDocument()
   })
 
   it('clicking a status chip filters to that status, clicking it again clears the filter', async () => {
