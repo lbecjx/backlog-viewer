@@ -53,6 +53,16 @@ describe('formatFriendlyDate', () => {
     // instead of erroring.
     expect(formatFriendlyDate('2026-02-30')).toBe('2026-02-30')
   })
+
+  it('formats a genuinely valid date with a year below 100, not a false rejection', () => {
+    // Regression test for a bug the day-overflow round-trip check itself
+    // introduced: `new Date(year, month, day)`'s two-digit-year quirk
+    // (a year in [0, 99] is silently reinterpreted as 1900+year) made the
+    // round-trip check misfire for every valid date in this range. Fixed
+    // via setFullYear, which takes the year literally.
+    expect(formatFriendlyDate('0050-06-15')).not.toBe('0050-06-15')
+    expect(formatFriendlyDate('0050-06-15')).toContain('50')
+  })
 })
 
 describe('formatFriendlyDateTimes', () => {

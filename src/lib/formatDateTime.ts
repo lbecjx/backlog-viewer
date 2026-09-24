@@ -15,6 +15,17 @@ const FRIENDLY_FORMAT = new Intl.DateTimeFormat(undefined, {
 
 const ISO_DATE_PREFIX = /^(\d{4})-(\d{2})-(\d{2})T/
 
+// The round-trip check below compares the literal Y/M/D digits in `isoUtc`
+// against the parsed Date's *UTC* getters — correct only when the string is
+// already a true UTC instant (a trailing `Z`, or a `+00:00` offset). A non-Z
+// offset that crosses a day boundary (e.g. `...T01:00:00+05:00`, whose UTC
+// date is one day earlier) would false-reject as malformed instead of
+// formatting correctly. Not fixed: the only real call site,
+// `formatFriendlyDateTimes` below, only ever extracts Z-terminated matches,
+// so this can't actually happen today — but `isoUtc` is just a parameter
+// name, not a type-enforced contract, so a future direct caller passing an
+// offset-bearing string would hit this. Flagging here rather than guarding
+// against a shape nothing today can produce.
 export function formatFriendlyDateTime(isoUtc: string): string {
   const date = new Date(isoUtc)
   if (Number.isNaN(date.getTime())) return isoUtc // Malformed input: show it verbatim rather than "Invalid Date".
@@ -54,11 +65,18 @@ export function formatFriendlyDate(isoDate: string): string {
   const match = PLAIN_DATE.exec(isoDate)
   if (!match) return isoDate
   const [, year, month, day] = match
-  const date = new Date(Number(year), Number(month) - 1, Number(day))
-  // Same silent-normalization gap as formatFriendlyDateTime: new Date(y, m, d)
-  // never errors on an out-of-range day (e.g. Feb 30 -> Mar 2), it just
-  // returns a different, valid-looking date. Round-trip the constructed
-  // date's own components against what was actually asked for.
+  // Built via setFullYear, not `new Date(year, month, day)`: the multi-arg
+  // constructor has its own quirk, unrelated to the day-overflow one below —
+  // a year in [0, 99] is silently reinterpreted as 1900+year (e.g. `new
+  // Date(50, 5, 15)` constructs 1950, not year 50). setFullYear takes the
+  // year literally, so a genuinely small year doesn't false-trigger the
+  // round-trip check right below it.
+  const date = new Date(0)
+  date.setFullYear(Number(year), Number(month) - 1, Number(day))
+  // Same silent-normalization gap as formatFriendlyDateTime: an out-of-range
+  // day (e.g. Feb 30 -> Mar 2) never errors, it just returns a different,
+  // valid-looking date. Round-trip the constructed date's own components
+  // against what was actually asked for.
   if (
     date.getFullYear() !== Number(year) ||
     date.getMonth() !== Number(month) - 1 ||
