@@ -52,7 +52,12 @@ export function StoryCard({
       </div>
       <p
         className={`mt-1 font-medium text-sm text-neutral-900 dark:text-neutral-100 ${
-          story.status === 'Done' ? 'line-through opacity-60' : ''
+          // Keyed off being archived, not off the status text — every
+          // archived story's Status happens to be "Done" today (an
+          // established server-side invariant), but the visual "this is
+          // closed and put away" signal should track the zone directly,
+          // not incidentally match a string.
+          story.zone === 'archive' ? 'line-through opacity-60' : ''
         }`}
       >
         {story.title}

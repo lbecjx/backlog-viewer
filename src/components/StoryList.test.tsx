@@ -86,4 +86,19 @@ describe('StoryList', () => {
 
     expect(onSelect).toHaveBeenCalledWith('MOCK-0001')
   })
+
+  it('hides the status filter row when every visible story shares the same status', () => {
+    // Filtering by the one status every card already has would do nothing —
+    // Archive is the realistic case (every archived story is "Done" today),
+    // but this is general StoryList behavior, not Archive-specific.
+    const sameStatus: BacklogStory[] = STORIES.map((s) => ({ ...s, status: 'Done' }))
+    render(<StoryList stories={sameStatus} selectedCode={null} onSelect={vi.fn()} />)
+    expect(screen.queryByRole('button', { name: 'Done' })).not.toBeInTheDocument()
+  })
+
+  it('shows the status filter row once a second distinct status is present', () => {
+    render(<StoryList stories={STORIES} selectedCode={null} onSelect={vi.fn()} />)
+    expect(screen.getByRole('button', { name: 'Done' })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'In Progress' })).toBeInTheDocument()
+  })
 })

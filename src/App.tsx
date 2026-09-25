@@ -87,10 +87,17 @@ export default function App() {
                 onStatusChange={updateStoryStatus}
               />
             )}
+            {/* Archive reuses StoryList as-is, exactly like Backlog — it's
+                already a generic search/filter/list over whatever `stories`
+                it's given, and `visibleStories` above is already
+                zone-filtered per tab. StoryCard's own title strikethrough is
+                keyed off `zone === 'archive'` (not `status === 'Done'`), so
+                an archived item still reads as visually "closed" here even
+                if a future project's data ever has an archived story whose
+                Status isn't literally "Done" — the human chose reusing the
+                list wholesale over a separate, near-duplicate component. */}
             {activeTab === 'archive' && (
-              <p className="p-8 text-center text-sm text-neutral-400 dark:text-neutral-500">
-                Archive view coming soon
-              </p>
+              <StoryList stories={visibleStories} selectedCode={displayedCode} onSelect={setSelectedCode} />
             )}
           </div>
           <p
