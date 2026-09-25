@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { fetchBacklogStatuses, fetchBoardMembership } from '../lib/backlogConfig'
+import { postStoryStatus } from '../lib/boardWrites'
 import { computeAcProgress, type AcProgress } from '../lib/computeAcProgress'
 import { computeZone, type Zone } from '../lib/computeZone'
 import { discoverStories } from '../lib/discoverStories'
@@ -16,6 +17,11 @@ interface UseBacklogStoriesResult {
   stories: BacklogStory[]
   loading: boolean
   error: string | null
+  // Optimistic: updates local state immediately, then persists to the
+  // server. On failure, reverts the local change and rethrows — the caller
+  // (a drag-and-drop drop handler) decides how to surface that to the human,
+  // this hook only owns the story data itself.
+  updateStoryStatus: (code: string, status: string) => Promise<void>
 }
 
 // `discoverStories` requires an absolute base URL (it resolves each filename via
@@ -68,5 +74,18 @@ export function useBacklogStories(): UseBacklogStoriesResult {
     }
   }, [])
 
-  return { stories, loading, error }
+  async function updateStoryStatus(code: string, status: string): Promise<void> {
+    const previousStatus = stories.find((s) => s.code === code)?.status
+    if (previousStatus === undefined) return
+
+    setStories((current) => current.map((s) => (s.code === code ? { ...s, status } : s)))
+    try {
+      await postStoryStatus(window.location.origin, code, status)
+    } catch (err) {
+      setStories((current) => current.map((s) => (s.code === code ? { ...s, status: previousStatus } : s)))
+      throw err
+    }
+  }
+
+  return { stories, loading, error, updateStoryStatus }
 }

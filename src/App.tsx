@@ -10,7 +10,7 @@ import type { Zone } from './lib/computeZone'
 import { tabId, tabPanelId } from './lib/tabIds'
 
 export default function App() {
-  const { stories, loading, error } = useBacklogStories()
+  const { stories, loading, error, updateStoryStatus } = useBacklogStories()
   const [selectedCode, setSelectedCode] = useState<string | null>(null)
   const [activeTab, setActiveTab] = useState<Zone>('backlog')
 
@@ -80,7 +80,12 @@ export default function App() {
               <StoryList stories={visibleStories} selectedCode={displayedCode} onSelect={setSelectedCode} />
             )}
             {activeTab === 'planner' && (
-              <PlannerBoard stories={visibleStories} selectedCode={selectedCode} onSelect={setSelectedCode} />
+              <PlannerBoard
+                stories={visibleStories}
+                selectedCode={selectedCode}
+                onSelect={setSelectedCode}
+                onStatusChange={updateStoryStatus}
+              />
             )}
             {activeTab === 'archive' && (
               <p className="p-8 text-center text-sm text-neutral-400 dark:text-neutral-500">
