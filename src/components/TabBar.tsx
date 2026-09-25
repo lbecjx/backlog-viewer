@@ -32,8 +32,12 @@ export function TabBar({ active, onChange }: TabBarProps) {
     document.getElementById(tabId(next.zone))?.focus()
   }
 
+  // Active tab is a filled pill (rounded background), not an underline —
+  // sits inline next to Logo inside App.tsx's header row, vertically
+  // centered rather than stretched (no border-touching alignment needed
+  // now that there's no per-tab bottom border to meet).
   return (
-    <div className="flex border-b border-neutral-200 dark:border-neutral-800" role="tablist">
+    <div className="flex items-center gap-1" role="tablist">
       {TABS.map(({ zone, label }, index) => (
         <button
           key={zone}
@@ -45,10 +49,10 @@ export function TabBar({ active, onChange }: TabBarProps) {
           tabIndex={active === zone ? 0 : -1}
           onClick={() => onChange(zone)}
           onKeyDown={(event) => handleKeyDown(event, index)}
-          className={`flex-1 py-2 text-sm font-medium border-b-2 -mb-px transition-colors ${
+          className={`px-3 py-1.5 rounded-md text-sm font-medium transition-colors ${
             active === zone
-              ? 'border-indigo-600 text-indigo-600 dark:border-indigo-400 dark:text-indigo-400'
-              : 'border-transparent text-neutral-500 hover:text-neutral-700 dark:text-neutral-400 dark:hover:text-neutral-200'
+              ? 'bg-neutral-200 text-indigo-600 dark:bg-neutral-800 dark:text-indigo-400'
+              : 'text-neutral-500 hover:text-neutral-700 dark:text-neutral-400 dark:hover:text-neutral-200'
           }`}
         >
           {label}

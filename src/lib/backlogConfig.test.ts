@@ -23,8 +23,8 @@ describe('fetchBacklogStatuses', () => {
     expect(statuses.statuses).toEqual([
       { name: 'Not Started', color: 'neutral' },
       { name: 'In Progress', color: 'blue' },
-      { name: 'Done', color: 'green' },
       { name: 'Blocked', color: 'red' },
+      { name: 'Done', color: 'green' },
     ])
   })
 

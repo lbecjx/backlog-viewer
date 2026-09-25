@@ -1,5 +1,11 @@
 import { afterEach, describe, expect, it } from 'vitest'
-import { configureStatusColors, getStatusAccentBorderClass, getStatusColorClasses, type StatusPalette } from './statusColor'
+import {
+  configureStatusColors,
+  getConfiguredStatuses,
+  getStatusAccentBorderClass,
+  getStatusColorClasses,
+  type StatusPalette,
+} from './statusColor'
 
 // A small literal palette, not the real status-colors.json — this file only
 // tests configureStatusColors's own mapping logic, not the real content of
@@ -72,5 +78,21 @@ describe('configureStatusColors', () => {
     configureStatusColors(PALETTE, [{ name: 'Done', color: 'green' }])
     configureStatusColors(PALETTE)
     expect(getStatusColorClasses('Not Started')).toBe('bg-neutral-100')
+  })
+})
+
+describe('getConfiguredStatuses', () => {
+  it('reflects the configured statuses in file order', () => {
+    configureStatusColors(PALETTE, [
+      { name: 'Blocked', color: 'red' },
+      { name: 'Done', color: 'green' },
+    ])
+    expect(getConfiguredStatuses()).toEqual(['Blocked', 'Done'])
+  })
+
+  it('falls back to the 3 defaults when called with no statuses argument', () => {
+    configureStatusColors(PALETTE, [{ name: 'Blocked', color: 'red' }])
+    configureStatusColors(PALETTE)
+    expect(getConfiguredStatuses()).toEqual(['Not Started', 'In Progress', 'Done'])
   })
 })
