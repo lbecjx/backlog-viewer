@@ -86,6 +86,64 @@ describe('useBacklogStories', () => {
       expect(result.current.stories[0].status).toBe('Not Started')
     })
 
+    it('does not let an older call, failing after a newer one already succeeded, clobber the newer status', async () => {
+      // Reproduces the stale-rollback race found during FULL-depth adversarial
+      // review: two overlapping updateStoryStatus calls for the same code, where
+      // the OLDER call's request settles (rejects) after the NEWER call's request
+      // has already resolved successfully. The older call's rollback must not
+      // blindly restore its own captured `previousStatus` — the newer status is
+      // the correct final state.
+      let statusCallCount = 0
+      let rejectFirstCall: (() => void) | undefined
+      const fetchMock = vi.fn((input: RequestInfo | URL) => {
+        const href = input.toString()
+        if (href.endsWith('/status-colors.json')) return notFound()
+        if (href.endsWith('.backlog-statuses.json')) return notFound()
+        if (href.endsWith('.backlog-board.json')) return notFound()
+        if (href.endsWith('/backlog/')) return okHtml('<a href="MOCK-0001-a-story.md">MOCK-0001-a-story.md</a>')
+        if (href.endsWith('MOCK-0001-a-story.md')) return okText(RAW_STORY)
+        if (href.endsWith('/api/status')) {
+          statusCallCount += 1
+          if (statusCallCount === 1) {
+            // The first call's request is parked here — it only settles (as a
+            // rejection) once the test explicitly triggers it below, after the
+            // second call has already resolved.
+            return new Promise((_resolve, reject) => {
+              rejectFirstCall = () => reject(new Error('boom'))
+            })
+          }
+          return Promise.resolve({ ok: true, json: () => Promise.resolve({ result: 'ok' }) })
+        }
+        throw new Error(`unexpected fetch in test: ${href}`)
+      })
+      vi.stubGlobal('fetch', fetchMock)
+
+      const { result } = renderHook(() => useBacklogStories())
+      await waitFor(() => expect(result.current.loading).toBe(false))
+
+      let firstCall: Promise<void> = Promise.resolve()
+      await act(async () => {
+        firstCall = result.current.updateStoryStatus('MOCK-0001', 'In Progress')
+        // Let the first call's optimistic update and fetch call happen before
+        // the second call starts, so they genuinely overlap rather than run
+        // sequentially.
+        await Promise.resolve()
+      })
+      expect(result.current.stories[0].status).toBe('In Progress')
+
+      await act(async () => {
+        await result.current.updateStoryStatus('MOCK-0001', 'Done')
+      })
+      expect(result.current.stories[0].status).toBe('Done')
+
+      await act(async () => {
+        rejectFirstCall?.()
+        await expect(firstCall).rejects.toThrow('boom')
+      })
+
+      expect(result.current.stories[0].status).toBe('Done')
+    })
+
     it('does nothing for a code that is not in the current story list', async () => {
       vi.stubGlobal('fetch', vi.fn(makeMockFetch(true)))
 

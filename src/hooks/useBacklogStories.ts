@@ -82,7 +82,16 @@ export function useBacklogStories(): UseBacklogStoriesResult {
     try {
       await postStoryStatus(window.location.origin, code, status)
     } catch (err) {
-      setStories((current) => current.map((s) => (s.code === code ? { ...s, status: previousStatus } : s)))
+      // Only revert a story that's still showing THIS call's own optimistic
+      // value — if a second, newer call for the same code has since landed
+      // (a rapid second drag before this one settled), its result must win.
+      // Found by adversarial review: comparing to `status` (this call's own
+      // target) instead of blindly overwriting is what stops an older,
+      // failed call from clobbering a newer, already-successful one with a
+      // stale value — a real, empirically-reproduced race, not theoretical.
+      setStories((current) =>
+        current.map((s) => (s.code === code && s.status === status ? { ...s, status: previousStatus } : s)),
+      )
       throw err
     }
   }
