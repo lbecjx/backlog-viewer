@@ -1,3 +1,4 @@
+import type { DragEvent } from 'react'
 import type { BacklogStory } from '../hooks/useBacklogStories'
 import { getStatusAccentBorderClass, getStatusColorClasses } from '../lib/statusColor'
 import { getTypeColorClasses, getTypeIcon } from '../lib/typeColor'
@@ -7,15 +8,35 @@ interface StoryCardProps {
   story: BacklogStory
   selected: boolean
   onSelect: () => void
+  // Optional: only the Planner board's cards are draggable — the Backlog
+  // list's cards aren't, so these stay unset (and the button plain,
+  // non-draggable) for that caller.
+  draggable?: boolean
+  isDragging?: boolean
+  onDragStart?: (event: DragEvent<HTMLButtonElement>) => void
+  onDragEnd?: () => void
 }
 
-export function StoryCard({ story, selected, onSelect }: StoryCardProps) {
+export function StoryCard({
+  story,
+  selected,
+  onSelect,
+  draggable = false,
+  isDragging = false,
+  onDragStart,
+  onDragEnd,
+}: StoryCardProps) {
   return (
     <button
       type="button"
       onClick={onSelect}
       aria-pressed={selected}
-      className={`w-full text-left p-3 rounded-r-lg border-y border-r border-l-4 transition-colors cursor-pointer ${getStatusAccentBorderClass(
+      draggable={draggable}
+      onDragStart={onDragStart}
+      onDragEnd={onDragEnd}
+      className={`w-full text-left p-3 rounded-r-lg border-y border-r border-l-4 transition-colors ${
+        draggable ? (isDragging ? 'cursor-grabbing' : 'cursor-grab') : 'cursor-pointer'
+      } ${isDragging ? 'opacity-50' : ''} ${getStatusAccentBorderClass(
         story.status,
       )} ${
         selected
@@ -31,7 +52,12 @@ export function StoryCard({ story, selected, onSelect }: StoryCardProps) {
       </div>
       <p
         className={`mt-1 font-medium text-sm text-neutral-900 dark:text-neutral-100 ${
-          story.status === 'Done' ? 'line-through opacity-60' : ''
+          // Keyed off being archived, not off the status text — every
+          // archived story's Status happens to be "Done" today (an
+          // established server-side invariant), but the visual "this is
+          // closed and put away" signal should track the zone directly,
+          // not incidentally match a string.
+          story.zone === 'archive' ? 'line-through opacity-60' : ''
         }`}
       >
         {story.title}

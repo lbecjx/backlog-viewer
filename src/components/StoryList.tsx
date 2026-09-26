@@ -40,7 +40,10 @@ export function StoryList({ stories, selectedCode, onSelect }: StoryListProps) {
         className="px-3 py-2 rounded-lg border border-neutral-300 text-sm bg-white text-neutral-900 placeholder:text-neutral-400 dark:bg-neutral-900 dark:border-neutral-700 dark:text-neutral-100 dark:placeholder:text-neutral-500"
       />
 
-      {statuses.length > 0 && (
+      {/* Filtering makes sense only when there's something to distinguish —
+          a single status among every visible story means every chip click
+          would just show all-or-nothing, so the row doesn't even render. */}
+      {statuses.length > 1 && (
         <div className="flex flex-wrap gap-1.5">
           {statuses.map((status) => (
             <StatusChip

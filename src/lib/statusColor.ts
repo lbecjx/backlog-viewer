@@ -37,6 +37,7 @@ const DEFAULT_STATUSES: StatusConfigEntry[] = [
 
 let knownStatusBadges = new Map<string, string>()
 let knownStatusBorders = new Map<string, string>()
+let knownStatusOrder: string[] = DEFAULT_STATUSES.map((s) => s.name)
 
 // Fetched once, from the same served root as the app itself (not the
 // per-project `/backlog/` folder — this is a fixed, project-independent
@@ -76,6 +77,7 @@ export function configureStatusColors(
   }
   knownStatusBadges = badges
   knownStatusBorders = borders
+  knownStatusOrder = statuses.map((s) => s.name)
 }
 
 export function getStatusColorClasses(status: string): string {
@@ -84,4 +86,11 @@ export function getStatusColorClasses(status: string): string {
 
 export function getStatusAccentBorderClass(status: string): string {
   return knownStatusBorders.get(status) ?? UNKNOWN_STATUS_ACCENT_BORDER
+}
+
+// The Planner board's columns: whatever `.backlog-statuses.json` declared
+// (in that file's order), or the same 3 defaults every other status-aware
+// view already falls back to when the project has no such file.
+export function getConfiguredStatuses(): string[] {
+  return [...knownStatusOrder]
 }

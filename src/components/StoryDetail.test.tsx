@@ -14,6 +14,7 @@ const STORY: BacklogStory = {
   updated: '2026-08-05',
   body: 'contenido de la story',
   progress: { done: 1, total: 3 },
+  zone: 'backlog',
 }
 
 describe('StoryDetail', () => {
