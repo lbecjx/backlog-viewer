@@ -6,6 +6,8 @@
 | **Type** | Story |
 | **Priority** | High |
 | **Status** | In Progress |
+| **Resolution** |  |
+| **Note** |  |
 | **Labels** | auth, backend, security |
 | **Created** | 2026-08-10 |
 | **Updated** | 2026-08-20 |

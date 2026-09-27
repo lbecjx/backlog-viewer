@@ -6,6 +6,8 @@
 | **Type** | Story |
 | **Priority** | Medium |
 | **Status** | Done |
+| **Resolution** | Done |
+| **Note** |  |
 | **Labels** | export, ui |
 | **Created** | 2026-08-01 |
 | **Updated** | 2026-08-05 |

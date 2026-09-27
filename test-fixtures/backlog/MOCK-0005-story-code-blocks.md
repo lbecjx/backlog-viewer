@@ -6,6 +6,8 @@
 | **Type** | Bug |
 | **Priority** | Low |
 | **Status** | Not Started |
+| **Resolution** |  |
+| **Note** |  |
 | **Labels** | performance, api, cache, backend |
 | **Created** | 2026-08-22 |
 | **Updated** | 2026-08-22 |

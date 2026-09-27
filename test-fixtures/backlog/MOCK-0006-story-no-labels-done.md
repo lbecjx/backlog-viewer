@@ -6,6 +6,8 @@
 | **Type** | Task |
 | **Priority** | Low |
 | **Status** | Done |
+| **Resolution** | Done |
+| **Note** |  |
 | **Created** | 2026-08-25 |
 | **Updated** | 2026-08-26 |
 
