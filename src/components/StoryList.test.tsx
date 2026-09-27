@@ -13,6 +13,7 @@ const STORIES: BacklogStory[] = [
     type: 'Story',
     priority: 'Medium',
     status: 'Done',
+    resolution: 'Done',
     labels: ['export', 'ui'],
     created: '2026-08-01',
     updated: '2026-08-05',
@@ -26,6 +27,7 @@ const STORIES: BacklogStory[] = [
     type: 'Story',
     priority: 'High',
     status: 'In Progress',
+    resolution: undefined,
     labels: ['auth'],
     created: '2026-08-10',
     updated: '2026-08-20',
@@ -85,6 +87,15 @@ describe('StoryList', () => {
     await user.click(screen.getByText('Agregar botón de exportar a CSV'))
 
     expect(onSelect).toHaveBeenCalledWith('MOCK-0001')
+  })
+
+  it('strikes a resolved story and leaves an unresolved one alone (a surface that renders the card)', () => {
+    // AC #5: the strikethrough must hold on every surface that renders a card,
+    // not only in StoryCard's own unit test. StoryList is the Archive tab's
+    // surface.
+    render(<StoryList stories={STORIES} selectedCode={null} onSelect={vi.fn()} />)
+    expect(screen.getByText('Agregar botón de exportar a CSV')).toHaveClass('line-through')
+    expect(screen.getByText('Migrar autenticación a OAuth2')).not.toHaveClass('line-through')
   })
 
   it('hides the status filter row when every visible story shares the same status', () => {

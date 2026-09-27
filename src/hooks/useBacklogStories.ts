@@ -164,14 +164,20 @@ export function useBacklogStories(): UseBacklogStoriesResult {
       // zone.)
       await postStoryBoard(window.location.origin, code, zone, resolution, reason)
       if (zone === 'archive' && isLatestWrite(code, 'zone', zoneVersion)) {
-        // Mirror only the server's own Done write, and only if THIS archive is
+        // Mirror only the server's own write, and only if THIS archive is
         // still the latest zone write — a newer move that already left archive
-        // must win. Bump the status version only when the Done write actually
-        // lands: bumping on a skipped write would falsely claim to be the
-        // newest status write and suppress a legitimate in-flight drag revert.
+        // must win. Both are mirrored: the Done status, and the resolution the
+        // server just wrote to the story file. Without the resolution the
+        // card's strikethrough (which follows the story's resolution) would
+        // stay wrong until a reload. Bump the status version only when the
+        // Done write actually lands: bumping on a skipped write would falsely
+        // claim to be the newest status write and suppress a legitimate
+        // in-flight drag revert.
         nextWriteVersion(code, 'status')
         setStories((current) =>
-          current.map((s) => (s.code === code && s.zone === zone ? { ...s, status: 'Done' } : s)),
+          current.map((s) =>
+            s.code === code && s.zone === zone ? { ...s, status: 'Done', resolution } : s,
+          ),
         )
       }
     } catch (err) {

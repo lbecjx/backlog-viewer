@@ -11,6 +11,7 @@ function makeStory(overrides: Partial<BacklogStory>): BacklogStory {
     type: 'Story',
     priority: 'Medium',
     status: 'Not Started',
+    resolution: undefined,
     labels: [],
     created: '2026-08-01',
     updated: '2026-08-01',
@@ -22,26 +23,42 @@ function makeStory(overrides: Partial<BacklogStory>): BacklogStory {
 }
 
 describe('StoryCard', () => {
-  it('strikes through the title for an archived story, even if its status is not literally "Done"', () => {
-    // Status is always "Done" for a real archived story today (a
-    // server-side invariant), but the strikethrough is keyed off the zone
-    // directly — this fixture status intentionally breaks that assumption
-    // to prove it isn't what the styling actually depends on.
-    const story = makeStory({ zone: 'archive', status: 'Not Started' })
+  it('strikes through the title when the story has a resolution, in any zone', () => {
+    const story = makeStory({ resolution: "Won't Do", zone: 'planner', status: 'In Progress' })
     render(<StoryCard story={story} selected={false} onSelect={vi.fn()} />)
     expect(screen.getByText('A story')).toHaveClass('line-through')
   })
 
-  it('does not strike through a Backlog story\'s title, even when its status is "Done"', () => {
-    const story = makeStory({ zone: 'backlog', status: 'Done' })
+  it('does not strike through a story with no resolution, even one archived or Done', () => {
+    // Status and zone are irrelevant to the rule — this fixture sets both to
+    // the values that used to imply "closed" (archived, Done) and still must
+    // not be struck, because there is no resolution.
+    const story = makeStory({ resolution: undefined, zone: 'archive', status: 'Done' })
     render(<StoryCard story={story} selected={false} onSelect={vi.fn()} />)
     expect(screen.getByText('A story')).not.toHaveClass('line-through')
   })
 
-  it('does not strike through a Planner story\'s title', () => {
-    const story = makeStory({ zone: 'planner', status: 'Done' })
+  it('does not strike a Done story that was never archived and has no resolution', () => {
+    // Synthetic: real data holds `Status: Done ⇔ Resolution set`, so a Done
+    // story with no resolution cannot actually occur — the fixture exists only
+    // to prove the rule reads the resolution and never the Status.
+    const story = makeStory({ resolution: undefined, zone: 'backlog', status: 'Done' })
     render(<StoryCard story={story} selected={false} onSelect={vi.fn()} />)
     expect(screen.getByText('A story')).not.toHaveClass('line-through')
+  })
+
+  it('does not strike through on a present-but-empty resolution row', () => {
+    const story = makeStory({ resolution: '', zone: 'archive' })
+    render(<StoryCard story={story} selected={false} onSelect={vi.fn()} />)
+    expect(screen.getByText('A story')).not.toHaveClass('line-through')
+  })
+
+  it('strikes through an unrecognized resolution value just the same (presence, not a value list)', () => {
+    // The canonical set lives in the plugin's story-model.json and grows, so
+    // the strike must key off presence — never a hardcoded list of values.
+    const story = makeStory({ resolution: 'Superseded', zone: 'backlog', status: 'Not Started' })
+    render(<StoryCard story={story} selected={false} onSelect={vi.fn()} />)
+    expect(screen.getByText('A story')).toHaveClass('line-through')
   })
 
   it('calls onSelect when Enter key is pressed', async () => {

@@ -258,6 +258,37 @@ describe('useBacklogStories', () => {
       expect(result.current.stories[0].status).toBe('Done')
     })
 
+    it('archive: mirrors the resolution onto the story on success, so the strike is right without a reload', async () => {
+      // The card's strikethrough follows the story's resolution, not its zone.
+      // The archive write is what puts a `| **Resolution** |` row on disk, so
+      // the client must mirror it — otherwise a just-archived card reads as
+      // NOT closed (and an unarchived one as closed) until a full reload.
+      vi.stubGlobal('fetch', vi.fn(makeMockFetch(true, true)))
+
+      const { result } = renderHook(() => useBacklogStories())
+      await waitFor(() => expect(result.current.loading).toBe(false))
+      expect(result.current.stories[0].resolution).toBeUndefined()
+
+      await act(() => result.current.moveStoryToZone('MOCK-0001', 'archive', "Won't Do", ''))
+
+      expect(result.current.stories[0].resolution).toBe("Won't Do")
+      expect(result.current.stories[0].status).toBe('Done')
+    })
+
+    it('archive: does not mirror a resolution when the write fails', async () => {
+      vi.stubGlobal('fetch', vi.fn(makeMockFetch(true, false)))
+
+      const { result } = renderHook(() => useBacklogStories())
+      await waitFor(() => expect(result.current.loading).toBe(false))
+
+      await act(async () => {
+        await expect(result.current.moveStoryToZone('MOCK-0001', 'archive', 'Done', '')).rejects.toThrow('board failed')
+      })
+
+      expect(result.current.stories[0].resolution).toBeUndefined()
+      expect(result.current.stories[0].status).toBe('Not Started')
+    })
+
     it('move: preserves a non-Done status (does not reset it to Not Started)', async () => {
       const inProgressStory = RAW_STORY.replace('| **Status** | Not Started |', '| **Status** | In Progress |')
       const fetchMock = vi.fn((input: RequestInfo | URL) => {

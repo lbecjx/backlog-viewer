@@ -27,6 +27,7 @@ function makeStory(overrides: Partial<BacklogStory>): BacklogStory {
     type: 'Story',
     priority: 'Medium',
     status: 'Not Started',
+    resolution: undefined,
     labels: [],
     created: '2026-08-01',
     updated: '2026-08-01',
@@ -81,6 +82,18 @@ describe('PlannerBoard', () => {
     render(<PlannerBoard stories={stories} selectedCode={null} onSelect={vi.fn()} onStatusChange={vi.fn(async () => {})} />)
     expect(screen.getByText('Not started story')).toBeInTheDocument()
     expect(screen.getByText('In progress story')).toBeInTheDocument()
+  })
+
+  it('strikes a resolved card and not an unresolved one (a surface that renders the card)', () => {
+    // AC #5: the strikethrough follows the story's resolution on every surface
+    // that renders a card. PlannerBoard is the Planner tab's surface.
+    const stories = [
+      makeStory({ code: 'MOCK-0001', title: 'Resolved story', status: 'Done', resolution: 'Done' }),
+      makeStory({ code: 'MOCK-0002', title: 'Unresolved story', status: 'Done', resolution: undefined }),
+    ]
+    render(<PlannerBoard stories={stories} selectedCode={null} onSelect={vi.fn()} onStatusChange={vi.fn(async () => {})} />)
+    expect(screen.getByText('Resolved story')).toHaveClass('line-through')
+    expect(screen.getByText('Unresolved story')).not.toHaveClass('line-through')
   })
 
   it('falls back to the 3 built-in defaults when no .backlog-statuses.json exists', () => {

@@ -113,12 +113,12 @@ export default function App() {
             {/* Archive reuses StoryList as-is, exactly like Backlog — it's
                 already a generic search/filter/list over whatever `stories`
                 it's given, and `visibleStories` above is already
-                zone-filtered per tab. StoryCard's own title strikethrough is
-                keyed off `zone === 'archive'` (not `status === 'Done'`), so
-                an archived item still reads as visually "closed" here even
-                if a future project's data ever has an archived story whose
-                Status isn't literally "Done" — the human chose reusing the
-                list wholesale over a separate, near-duplicate component. */}
+                zone-filtered per tab. The card's title strikethrough is a
+                separate concern: it follows the story's own resolution, not
+                the tab or the zone, so an archived item reads as visually
+                "closed" only when it actually has one. The human chose
+                reusing the list wholesale over a separate, near-duplicate
+                component. */}
             {activeTab === 'archive' && (
               <StoryList
                 stories={visibleStories}

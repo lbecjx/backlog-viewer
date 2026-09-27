@@ -10,6 +10,7 @@ const STORY: BacklogStory = {
   type: 'Story',
   priority: 'High',
   status: 'In Progress',
+  resolution: undefined,
   labels: ['auth'],
   created: '2026-08-10',
   updated: '2026-08-20',

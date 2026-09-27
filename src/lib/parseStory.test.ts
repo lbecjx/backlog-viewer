@@ -37,6 +37,21 @@ describe('parseStory', () => {
     expect(story.labels).toEqual(['performance', 'api', 'cache', 'backend'])
   })
 
+  it('reads the Resolution row when the story has one (MOCK-0001, Done)', async () => {
+    const raw = await fetchStoryRaw(BASE_URL, 'MOCK-0001-story-done-normal.md')
+    expect(parseStory(raw, 'MOCK-0001-story-done-normal.md').resolution).toBe('Done')
+  })
+
+  it('treats a present-but-empty Resolution row as no resolution (MOCK-0003)', async () => {
+    const raw = await fetchStoryRaw(BASE_URL, 'MOCK-0003-story-multiline-lists.md')
+    expect(parseStory(raw, 'MOCK-0003-story-multiline-lists.md').resolution).toBe('')
+  })
+
+  it('treats an absent Resolution row as no resolution (MOCK-0004)', async () => {
+    const raw = await fetchStoryRaw(BASE_URL, 'MOCK-0004-story-malformed-table.md')
+    expect(parseStory(raw, 'MOCK-0004-story-malformed-table.md').resolution).toBeUndefined()
+  })
+
   it('preserves multi-line list content in the body verbatim, unmodified (MOCK-0003)', async () => {
     const raw = await fetchStoryRaw(BASE_URL, 'MOCK-0003-story-multiline-lists.md')
     const story = parseStory(raw, 'MOCK-0003-story-multiline-lists.md')

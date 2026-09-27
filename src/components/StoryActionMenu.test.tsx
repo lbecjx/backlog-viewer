@@ -11,6 +11,7 @@ function makeStory(overrides: Partial<BacklogStory>): BacklogStory {
     type: 'Story',
     priority: 'Medium',
     status: 'Not Started',
+    resolution: undefined,
     labels: [],
     created: '2026-08-01',
     updated: '2026-08-01',
