@@ -4,6 +4,12 @@ All notable changes to this project are documented here. Format loosely follows
 [Keep a Changelog](https://keepachangelog.com/), versioning follows
 [Semantic Versioning](https://semver.org/).
 
+## 0.1.2
+
+- Story loading no longer fails entirely when a single story fetch drops a
+  connection: the fetch is retried, and a story that still can't be loaded is
+  skipped so the rest of the backlog renders instead of a full error.
+
 ## 0.1.1
 
 - `parseStory` no longer falls back to legacy Spanish metadata keys
