@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest'
+import { describe, expect, it, vi } from 'vitest'
 import { discoverStories, discoverStoryFilenames, fetchStoryRaw } from './discoverStories'
 
 // Talks to the real `python3 -m http.server` instance spawned by
@@ -45,5 +45,34 @@ describe('discoverStories', () => {
     expect(stories).toHaveLength(8)
     const mock1 = stories.find((s) => s.filename === 'MOCK-0001-story-done-normal.md')
     expect(mock1?.raw).toContain('Agregar botón de exportar a CSV')
+  })
+
+  it('retries a single transient fetch failure instead of failing the whole load', async () => {
+    // Inject exactly ONE dropped connection (the class of failure the server's
+    // small accept backlog used to cause) for a single file, and delegate
+    // everything else to the real fetch — not a whole-path mock. The bounded
+    // retry in discoverStories must recover it, so the full load still
+    // succeeds with all 8 stories.
+    const realFetch = globalThis.fetch
+    const target = 'MOCK-0002-story-in-progress.md'
+    let failedOnce = false
+
+    const spy = vi.spyOn(globalThis, 'fetch').mockImplementation(async (input, init) => {
+      const url = typeof input === 'string' ? input : input instanceof URL ? input.href : input.url
+      if (!failedOnce && url.endsWith(target)) {
+        failedOnce = true
+        throw new TypeError('fetch failed: ECONNRESET (injected)')
+      }
+      return realFetch(input, init)
+    })
+
+    try {
+      const stories = await discoverStories(BASE_URL)
+      expect(stories).toHaveLength(8)
+      const recovered = stories.find((s) => s.filename === target)
+      expect(recovered?.raw).toContain('MOCK-0002')
+    } finally {
+      spy.mockRestore()
+    }
   })
 })

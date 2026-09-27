@@ -84,7 +84,10 @@ export function useBacklogStories(): UseBacklogStoriesResult {
     // project with none of these files gets configureStatusColors's own
     // defaults and every story defaulting to the Backlog zone (each config
     // fetch resolves to "nothing found" rather than rejecting; see
-    // backlogConfig.ts and statusColor.ts).
+    // backlogConfig.ts and statusColor.ts). `discoverStories` is itself
+    // partial-tolerant now (it retries a transient per-story failure, then
+    // skips it), so this catch is reserved for genuine failures — most notably
+    // the directory listing itself, where zero stories is a real error.
     Promise.all([loadStatusPalette(), fetchBacklogStatuses(baseUrl), fetchBoardMembership(baseUrl), discoverStories(baseUrl)])
       .then(([palette, statuses, membership, discovered]) => {
         if (cancelled) return

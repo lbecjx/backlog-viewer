@@ -38,21 +38,65 @@ export async function discoverStoryFilenames(baseUrl: string): Promise<string[]>
   return hrefs.filter((href) => STORY_FILENAME_PATTERN.test(href)).sort()
 }
 
+// Distinguishes "the server answered with an HTTP error" (404, 500 — retrying
+// changes nothing) from a transport-level failure (a dropped connection, which
+// surfaces as a runtime-specific error type — `TypeError` in browsers/undici).
+// Keying the retry off "is NOT this class" is more portable across runtimes
+// than matching one specific error type.
+class StoryFetchHttpError extends Error {}
+
 export async function fetchStoryRaw(baseUrl: string, filename: string): Promise<string> {
   assertTrailingSlash(baseUrl)
   const res = await fetch(new URL(filename, baseUrl), { cache: 'no-store' })
   if (!res.ok) {
-    throw new Error(`Failed to fetch story ${filename}: ${res.status} ${res.statusText}`)
+    throw new StoryFetchHttpError(`Failed to fetch story ${filename}: ${res.status} ${res.statusText}`)
   }
   return res.text()
 }
 
+// A bounded retry for the transient failure this whole mechanism exists to
+// survive: under the server's small accept backlog, a burst of parallel story
+// fetches can get a connection reset, and `fetch` then rejects before any HTTP
+// response. That is transient and worth retrying. Our own HTTP-error throw
+// above is a `StoryFetchHttpError` (a 404 or 500 won't heal on retry), so
+// anything else is treated as retryable.
+const STORY_FETCH_ATTEMPTS = 3
+const STORY_FETCH_RETRY_BASE_MS = 50
+
+function isRetryableFetchError(err: unknown): boolean {
+  return !(err instanceof StoryFetchHttpError)
+}
+
+async function fetchStoryWithRetry(baseUrl: string, filename: string): Promise<string> {
+  let lastError: unknown
+  for (let attempt = 1; attempt <= STORY_FETCH_ATTEMPTS; attempt++) {
+    try {
+      return await fetchStoryRaw(baseUrl, filename)
+    } catch (err) {
+      lastError = err
+      if (attempt >= STORY_FETCH_ATTEMPTS || !isRetryableFetchError(err)) break
+      await new Promise((resolve) => setTimeout(resolve, STORY_FETCH_RETRY_BASE_MS * attempt))
+    }
+  }
+  throw lastError
+}
+
 export async function discoverStories(baseUrl: string): Promise<DiscoveredStory[]> {
   const filenames = await discoverStoryFilenames(baseUrl)
-  return Promise.all(
-    filenames.map(async (filename) => ({
-      filename,
-      raw: await fetchStoryRaw(baseUrl, filename),
-    })),
+  // Partial tolerance: one story fetch failing — even after the bounded retry
+  // above — must not fail the whole load. The viewer renders the stories that
+  // did come back instead of the single "Error reading the backlog" it used to
+  // show for a backlog that actually exists. A failure of
+  // `discoverStoryFilenames` (the listing) is deliberately NOT caught here:
+  // zero stories is a genuine failure, not a partial one.
+  const results = await Promise.all(
+    filenames.map(async (filename) => {
+      try {
+        return { filename, raw: await fetchStoryWithRetry(baseUrl, filename) }
+      } catch {
+        return null
+      }
+    }),
   )
+  return results.filter((story): story is DiscoveredStory => story !== null)
 }
