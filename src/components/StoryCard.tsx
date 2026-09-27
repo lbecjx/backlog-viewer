@@ -1,20 +1,26 @@
-import type { DragEvent } from 'react'
+import type { DragEvent, KeyboardEvent } from 'react'
 import type { BacklogStory } from '../hooks/useBacklogStories'
+import type { Zone } from '../lib/computeZone'
 import { getStatusAccentBorderClass, getStatusColorClasses } from '../lib/statusColor'
 import { getTypeColorClasses, getTypeIcon } from '../lib/typeColor'
 import { LabelBadge } from './LabelBadge'
+import { StoryActionMenu } from './StoryActionMenu'
 
 interface StoryCardProps {
   story: BacklogStory
   selected: boolean
   onSelect: () => void
   // Optional: only the Planner board's cards are draggable — the Backlog
-  // list's cards aren't, so these stay unset (and the button plain,
+  // list's cards aren't, so these stay unset (and the div plain,
   // non-draggable) for that caller.
   draggable?: boolean
   isDragging?: boolean
-  onDragStart?: (event: DragEvent<HTMLButtonElement>) => void
+  onDragStart?: (event: DragEvent<HTMLDivElement>) => void
   onDragEnd?: () => void
+  // Optional: zone transition handler for the action menu. When present,
+  // the menu is shown; when absent, no menu appears (e.g., in lists that
+  // don't support actions).
+  onMoveToZone?: (code: string, zone: Zone, resolution?: string, reason?: string) => Promise<void>
 }
 
 export function StoryCard({
@@ -25,11 +31,26 @@ export function StoryCard({
   isDragging = false,
   onDragStart,
   onDragEnd,
+  onMoveToZone,
 }: StoryCardProps) {
+  function handleKeyDown(event: KeyboardEvent<HTMLDivElement>) {
+    if (event.key === 'Enter' || event.key === ' ') {
+      event.preventDefault()
+      onSelect()
+    }
+  }
+
+  // Wrapper: adapt moveStoryToZone signature (which takes code as first arg)
+  // to StoryActionMenu's signature (which doesn't, because it already knows the story)
+  const adaptedMoveToZone = onMoveToZone ? (zone: Zone, resolution?: string, reason?: string) =>
+    onMoveToZone(story.code, zone, resolution, reason) : undefined
+
   return (
-    <button
-      type="button"
+    <div
+      role="button"
+      tabIndex={0}
       onClick={onSelect}
+      onKeyDown={handleKeyDown}
       aria-pressed={selected}
       draggable={draggable}
       onDragStart={onDragStart}
@@ -46,9 +67,16 @@ export function StoryCard({
     >
       <div className="flex items-center justify-between gap-2">
         <span className="font-mono text-xs text-neutral-500 dark:text-neutral-400">{story.code}</span>
-        <span className={`text-xs px-1.5 py-0.5 rounded font-medium ${getStatusColorClasses(story.status)}`}>
-          {story.status}
-        </span>
+        <div className="flex items-center gap-2">
+          <span className={`text-xs px-1.5 py-0.5 rounded font-medium ${getStatusColorClasses(story.status)}`}>
+            {story.status}
+          </span>
+          {adaptedMoveToZone && (
+            <div onClick={(e) => e.stopPropagation()}>
+              <StoryActionMenu story={story} onMoveToZone={adaptedMoveToZone} />
+            </div>
+          )}
+        </div>
       </div>
       <p
         className={`mt-1 font-medium text-sm text-neutral-900 dark:text-neutral-100 ${
@@ -79,6 +107,6 @@ export function StoryCard({
           ))}
         </div>
       )}
-    </button>
+    </div>
   )
 }

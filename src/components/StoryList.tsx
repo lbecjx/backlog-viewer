@@ -1,5 +1,6 @@
 import { useMemo, useState } from 'react'
 import type { BacklogStory } from '../hooks/useBacklogStories'
+import type { Zone } from '../lib/computeZone'
 import { StatusChip } from './StatusChip'
 import { StoryCard } from './StoryCard'
 
@@ -7,6 +8,7 @@ interface StoryListProps {
   stories: BacklogStory[]
   selectedCode: string | null
   onSelect: (code: string) => void
+  onMoveToZone?: (code: string, zone: Zone, resolution?: string, reason?: string) => Promise<void>
 }
 
 function matchesSearch(story: BacklogStory, query: string): boolean {
@@ -15,7 +17,7 @@ function matchesSearch(story: BacklogStory, query: string): boolean {
   return haystack.includes(query.toLowerCase())
 }
 
-export function StoryList({ stories, selectedCode, onSelect }: StoryListProps) {
+export function StoryList({ stories, selectedCode, onSelect, onMoveToZone }: StoryListProps) {
   const [query, setQuery] = useState('')
   const [statusFilter, setStatusFilter] = useState<string | null>(null)
 
@@ -63,6 +65,7 @@ export function StoryList({ stories, selectedCode, onSelect }: StoryListProps) {
             story={story}
             selected={story.code === selectedCode}
             onSelect={() => onSelect(story.code)}
+            onMoveToZone={onMoveToZone}
           />
         ))}
         {filtered.length === 0 && (

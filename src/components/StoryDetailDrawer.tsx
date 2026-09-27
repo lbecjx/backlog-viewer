@@ -1,14 +1,17 @@
 import { useEffect, useState, type ReactNode } from 'react'
 import type { BacklogStory } from '../hooks/useBacklogStories'
+import type { Zone } from '../lib/computeZone'
 import { formatFriendlyDate } from '../lib/formatDateTime'
 import { getStatusColorClasses } from '../lib/statusColor'
 import { getTypeColorClasses, getTypeIcon } from '../lib/typeColor'
 import { LabelBadge } from './LabelBadge'
+import { StoryActionMenu } from './StoryActionMenu'
 import { StoryBody } from './StoryBody'
 
 interface StoryDetailDrawerProps {
   story: BacklogStory | null
   onClose: () => void
+  onMoveToZone?: (code: string, zone: Zone, resolution?: string, reason?: string) => Promise<void>
 }
 
 // Always mounted (see App.tsx) so the closing transition can play. `open`
@@ -20,7 +23,7 @@ interface StoryDetailDrawerProps {
 // review: gating content on `story` too meant `open` and the content check
 // were the same expression, so there was never a frame where the panel was
 // animating out WITH its content still visible).
-export function StoryDetailDrawer({ story, onClose }: StoryDetailDrawerProps) {
+export function StoryDetailDrawer({ story, onClose, onMoveToZone }: StoryDetailDrawerProps) {
   const open = story !== null
   const [shown, setShown] = useState(story)
   // Adjusting state during render (not in a useEffect) per React's own
@@ -31,6 +34,9 @@ export function StoryDetailDrawer({ story, onClose }: StoryDetailDrawerProps) {
   if (story !== null && story !== shown) {
     setShown(story)
   }
+
+  const adaptedMoveToZone = onMoveToZone && shown ? (zone: Zone, resolution?: string, reason?: string) =>
+    onMoveToZone(shown.code, zone, resolution, reason) : undefined
 
   useEffect(() => {
     if (!open) return
@@ -60,14 +66,17 @@ export function StoryDetailDrawer({ story, onClose }: StoryDetailDrawerProps) {
             <div className="px-5 pt-4 pb-3.5 border-b border-neutral-200 dark:border-neutral-800 shrink-0">
               <div className="flex items-center justify-between mb-2">
                 <span className="font-mono text-xs text-neutral-500">{shown.code}</span>
-                <button
-                  type="button"
-                  onClick={onClose}
-                  aria-label="Close story detail"
-                  className="w-[26px] h-[26px] flex items-center justify-center rounded-md text-neutral-400 hover:text-neutral-900 hover:bg-neutral-100 dark:hover:text-neutral-100 dark:hover:bg-neutral-800 transition-colors"
-                >
-                  ✕
-                </button>
+                <div className="flex items-center gap-1">
+                  {adaptedMoveToZone && <StoryActionMenu key={shown.code} story={shown} onMoveToZone={adaptedMoveToZone} />}
+                  <button
+                    type="button"
+                    onClick={onClose}
+                    aria-label="Close story detail"
+                    className="w-[26px] h-[26px] flex items-center justify-center rounded-md text-neutral-400 hover:text-neutral-900 hover:bg-neutral-100 dark:hover:text-neutral-100 dark:hover:bg-neutral-800 transition-colors"
+                  >
+                    ✕
+                  </button>
+                </div>
               </div>
               <h2 className="text-base font-bold leading-snug mb-2.5 text-neutral-900 dark:text-neutral-50">
                 {shown.title}

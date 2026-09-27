@@ -1,5 +1,6 @@
 import { render, screen } from '@testing-library/react'
-import { describe, expect, it } from 'vitest'
+import userEvent from '@testing-library/user-event'
+import { describe, expect, it, vi } from 'vitest'
 import type { BacklogStory } from '../hooks/useBacklogStories'
 import { StoryDetail } from './StoryDetail'
 
@@ -53,5 +54,36 @@ describe('StoryDetail', () => {
     render(<StoryDetail story={{ ...STORY, labels: [] }} />)
     expect(screen.queryByText('Labels')).not.toBeInTheDocument()
     expect(screen.queryByText('export')).not.toBeInTheDocument()
+  })
+
+  it('shows the action menu when onMoveToZone is provided', () => {
+    const mockMoveToZone = vi.fn()
+    render(<StoryDetail story={STORY} onMoveToZone={mockMoveToZone} />)
+    expect(screen.getByLabelText('Story actions')).toBeInTheDocument()
+  })
+
+  it('does not show the action menu when onMoveToZone is not provided', () => {
+    render(<StoryDetail story={STORY} />)
+    expect(screen.queryByLabelText('Story actions')).not.toBeInTheDocument()
+  })
+
+  it('resets the action menu when a different story is shown (no state bleed across stories)', async () => {
+    // The menu is keyed by story code: if the panel switches stories while a
+    // confirm dialog is open — which happens when an optimistic zone change
+    // moves the current story out of the tab — the menu must remount, not
+    // reuse its state and let a retry act on the newly-shown story (found in
+    // re-validation).
+    const user = userEvent.setup()
+    const storyA = { ...STORY, code: 'MOCK-A' }
+    const storyB = { ...STORY, code: 'MOCK-B' }
+    const { rerender } = render(<StoryDetail story={storyA} onMoveToZone={vi.fn()} />)
+
+    await user.click(screen.getByLabelText('Story actions'))
+    await user.click(screen.getByText('Move to Planner'))
+    expect(screen.getByText('Move to Planner?')).toBeInTheDocument()
+
+    rerender(<StoryDetail story={storyB} onMoveToZone={vi.fn()} />)
+
+    expect(screen.queryByText('Move to Planner?')).not.toBeInTheDocument()
   })
 })

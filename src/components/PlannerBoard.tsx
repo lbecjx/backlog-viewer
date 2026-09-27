@@ -1,6 +1,7 @@
-import { useState, type DragEvent } from 'react'
+import { useMemo, useState, type DragEvent } from 'react'
 import type { BacklogStory } from '../hooks/useBacklogStories'
 import { getConfiguredStatuses } from '../lib/statusColor'
+import type { Zone } from '../lib/computeZone'
 import { StoryCard } from './StoryCard'
 
 interface PlannerBoardProps {
@@ -11,6 +12,7 @@ interface PlannerBoardProps {
   // already optimistic-with-rollback on its own side; this component only
   // needs to call it and surface a failure, not manage the revert itself.
   onStatusChange: (code: string, status: string) => Promise<void>
+  onMoveToZone?: (code: string, zone: Zone, resolution?: string, reason?: string) => Promise<void>
 }
 
 interface Column {
@@ -24,12 +26,12 @@ interface Column {
   stories: BacklogStory[]
 }
 
-export function PlannerBoard({ stories, selectedCode, onSelect, onStatusChange }: PlannerBoardProps) {
+export function PlannerBoard({ stories, selectedCode, onSelect, onStatusChange, onMoveToZone }: PlannerBoardProps) {
   const [draggedCode, setDraggedCode] = useState<string | null>(null)
   const [dropTargetStatus, setDropTargetStatus] = useState<string | null>(null)
   const [dragError, setDragError] = useState<string | null>(null)
 
-  function handleDragStart(event: DragEvent<HTMLButtonElement>, code: string) {
+  function handleDragStart(event: DragEvent<HTMLDivElement>, code: string) {
     // Required for Firefox to permit the drag gesture at all — some data
     // has to be set on the DataTransfer during dragstart, even though
     // nothing here reads it back (the drop handler uses `draggedCode`,
@@ -55,28 +57,37 @@ export function PlannerBoard({ stories, selectedCode, onSelect, onStatusChange }
     })
   }
 
-  // Deduplicated: a repeated name in the config would otherwise produce two
-  // columns computing the identical filter and colliding on React key.
-  const configuredStatuses = [...new Set(getConfiguredStatuses())]
-  const otherStories = stories.filter((s) => !configuredStatuses.includes(s.status))
+  // Memoized: recomputing every column's `stories.filter` on each render — and
+  // a drag fires a render per pointer event — was the hot path this avoids.
+  // `getConfiguredStatuses()` returns the palette set once at load (see
+  // useBacklogStories), before any story ever renders, so it's stable across
+  // the memo's `stories`-keyed lifetime without appearing in the dep array.
+  const columns: Column[] = useMemo(() => {
+    // Deduplicated: a repeated name in the config would otherwise produce two
+    // columns computing the identical filter and colliding on React key.
+    const configuredStatuses = [...new Set(getConfiguredStatuses())]
+    const otherStories = stories.filter((s) => !configuredStatuses.includes(s.status))
 
-  const columns: Column[] = configuredStatuses.map((status) => ({
-    status,
-    label: status,
-    stories: stories.filter((s) => s.status === status),
-  }))
-  // The catch-all column only appears when it would hold something — a
-  // status outside `.backlog-statuses.json` (leftover data, a typo) must
-  // still be visible somewhere, but an always-present empty column would be
-  // noise for the common case where every story's status is already
-  // configured. Inserted right before the last configured column (not
-  // appended after it): a project's config conventionally lists its
-  // terminal/completed status last (e.g. "Done"), and unfiled stories read
-  // better sitting just ahead of that than trailing behind it.
-  if (otherStories.length > 0) {
-    const insertAt = Math.max(columns.length - 1, 0)
-    columns.splice(insertAt, 0, { status: null, label: 'Other', stories: otherStories })
-  }
+    const cols: Column[] = configuredStatuses.map((status) => ({
+      status,
+      label: status,
+      stories: stories.filter((s) => s.status === status),
+    }))
+    // The catch-all column only appears when it would hold something — a
+    // status outside `.backlog-statuses.json` (leftover data, a typo) must
+    // still be visible somewhere, but an always-present empty column would be
+    // noise for the common case where every story's status is already
+    // configured. Inserted right before the last configured column (not
+    // appended after it): a project's config conventionally lists its
+    // terminal/completed status last (e.g. "Done"), and unfiled stories read
+    // better sitting just ahead of that than trailing behind it.
+    if (otherStories.length > 0) {
+      const insertAt = Math.max(cols.length - 1, 0)
+      cols.splice(insertAt, 0, { status: null, label: 'Other', stories: otherStories })
+    }
+
+    return cols
+  }, [stories])
 
   return (
     <div className="flex flex-col h-full">
@@ -167,6 +178,7 @@ export function PlannerBoard({ stories, selectedCode, onSelect, onStatusChange }
                     isDragging={draggedCode === story.code}
                     onDragStart={(event) => handleDragStart(event, story.code)}
                     onDragEnd={() => setDraggedCode(null)}
+                    onMoveToZone={onMoveToZone}
                   />
                 ))}
                 {columnStories.length === 0 && (
