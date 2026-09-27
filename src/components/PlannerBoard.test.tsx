@@ -167,7 +167,7 @@ describe('PlannerBoard', () => {
       const stories = [makeStory({ code: 'MOCK-0001', title: 'Card to drag', status: 'Not Started' })]
       render(<PlannerBoard stories={stories} selectedCode={null} onSelect={vi.fn()} onStatusChange={onStatusChange} />)
 
-      dragStart(screen.getByText('Card to drag').closest('button')!)
+      dragStart(screen.getByText('Card to drag').closest('[role="button"]')!)
       const target = getColumnDropTarget('In Progress')
       fireEvent.dragOver(target)
       fireEvent.drop(target)
@@ -180,7 +180,7 @@ describe('PlannerBoard', () => {
       const stories = [makeStory({ code: 'MOCK-0001', title: 'Card to drag', status: 'Not Started' })]
       render(<PlannerBoard stories={stories} selectedCode={null} onSelect={vi.fn()} onStatusChange={onStatusChange} />)
 
-      dragStart(screen.getByText('Card to drag').closest('button')!)
+      dragStart(screen.getByText('Card to drag').closest('[role="button"]')!)
       const target = getColumnDropTarget('Not Started')
       fireEvent.dragOver(target)
       fireEvent.drop(target)
@@ -196,7 +196,7 @@ describe('PlannerBoard', () => {
       ]
       render(<PlannerBoard stories={stories} selectedCode={null} onSelect={vi.fn()} onStatusChange={onStatusChange} />)
 
-      dragStart(screen.getByText('Card to drag').closest('button')!)
+      dragStart(screen.getByText('Card to drag').closest('[role="button"]')!)
       const otherColumn = getColumnDropTarget('Other')
       fireEvent.dragOver(otherColumn)
       fireEvent.drop(otherColumn)
@@ -214,7 +214,7 @@ describe('PlannerBoard', () => {
       const stories = [makeStory({ code: 'MOCK-0001', title: 'Card to drag', status: 'Not Started' })]
       render(<PlannerBoard stories={stories} selectedCode={null} onSelect={vi.fn()} onStatusChange={onStatusChange} />)
 
-      dragStart(screen.getByText('Card to drag').closest('button')!)
+      dragStart(screen.getByText('Card to drag').closest('[role="button"]')!)
       const target = getColumnDropTarget('In Progress')
       fireEvent.dragOver(target)
       fireEvent.drop(target)
@@ -230,7 +230,7 @@ describe('PlannerBoard', () => {
       const stories = [makeStory({ code: 'MOCK-0002', title: 'Uncategorized card', status: 'Weird Custom Status' })]
       render(<PlannerBoard stories={stories} selectedCode={null} onSelect={vi.fn()} onStatusChange={onStatusChange} />)
 
-      dragStart(screen.getByText('Uncategorized card').closest('button')!)
+      dragStart(screen.getByText('Uncategorized card').closest('[role="button"]')!)
       const target = getColumnDropTarget('In Progress')
       fireEvent.dragOver(target)
       fireEvent.drop(target)

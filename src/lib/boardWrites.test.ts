@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it, vi } from 'vitest'
-import { postStoryStatus } from './boardWrites'
+import { postStoryBoard, postStoryStatus } from './boardWrites'
 
 // Same exception as loadStatusPalette.test.ts: this repo's own test-fixture
 // server is a plain `python3 -m http.server`, which can't process POST
@@ -54,6 +54,58 @@ describe('postStoryStatus', () => {
     )
     await expect(postStoryStatus('http://localhost:8001', 'MOCK-0002', 'Done')).rejects.toThrow(
       'Failed to update status (HTTP 502)',
+    )
+  })
+})
+
+describe('postStoryBoard', () => {
+  it('POSTs to /api/board with code, zone, and optional resolution/reason', async () => {
+    const fetchMock = vi.fn().mockResolvedValue({ ok: true, json: () => Promise.resolve({ result: 'ok' }) })
+    vi.stubGlobal('fetch', fetchMock)
+
+    await postStoryBoard('http://localhost:8001', 'MOCK-0003', 'archive', 'Done', 'Completed all work')
+
+    expect(fetchMock).toHaveBeenCalledTimes(1)
+    const [url, init] = fetchMock.mock.calls[0] as [URL, RequestInit]
+    expect(url.toString()).toBe('http://localhost:8001/api/board')
+    expect(init.method).toBe('POST')
+    expect(init.headers).toEqual({ 'Content-Type': 'application/json' })
+    expect(JSON.parse(init.body as string)).toEqual({
+      code: 'MOCK-0003',
+      zone: 'archive',
+      resolution: 'Done',
+      reason: 'Completed all work',
+    })
+  })
+
+  it('resolves without throwing on a 200 response', async () => {
+    vi.stubGlobal('fetch', vi.fn().mockResolvedValue({ ok: true, json: () => Promise.resolve({ result: 'ok' }) }))
+    await expect(postStoryBoard('http://localhost:8001', 'MOCK-0003', 'planner')).resolves.toBeUndefined()
+  })
+
+  it('throws with the server-provided error message on a non-2xx response', async () => {
+    vi.stubGlobal(
+      'fetch',
+      vi.fn().mockResolvedValue({
+        ok: false,
+        status: 400,
+        json: () => Promise.resolve({ error: 'invalid zone' }),
+      }),
+    )
+    await expect(postStoryBoard('http://localhost:8001', 'MOCK-0003', 'invalid')).rejects.toThrow('invalid zone')
+  })
+
+  it('falls back to a generic message when the error response is not the expected JSON shape', async () => {
+    vi.stubGlobal(
+      'fetch',
+      vi.fn().mockResolvedValue({
+        ok: false,
+        status: 502,
+        json: () => Promise.reject(new Error('not JSON')),
+      }),
+    )
+    await expect(postStoryBoard('http://localhost:8001', 'MOCK-0003', 'backlog')).rejects.toThrow(
+      'Failed to update board (HTTP 502)',
     )
   })
 })

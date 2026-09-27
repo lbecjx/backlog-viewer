@@ -1,16 +1,19 @@
 import type { ReactNode } from 'react'
 import type { BacklogStory } from '../hooks/useBacklogStories'
+import type { Zone } from '../lib/computeZone'
 import { formatFriendlyDate } from '../lib/formatDateTime'
 import { getStatusColorClasses } from '../lib/statusColor'
 import { getTypeColorClasses, getTypeIcon } from '../lib/typeColor'
 import { LabelBadge } from './LabelBadge'
+import { StoryActionMenu } from './StoryActionMenu'
 import { StoryBody } from './StoryBody'
 
 interface StoryDetailProps {
   story: BacklogStory | null
+  onMoveToZone?: (code: string, zone: Zone, resolution?: string, reason?: string) => Promise<void>
 }
 
-export function StoryDetail({ story }: StoryDetailProps) {
+export function StoryDetail({ story, onMoveToZone }: StoryDetailProps) {
   if (!story) {
     return (
       <div className="h-full flex flex-col items-center justify-center gap-3 text-neutral-400 dark:text-neutral-500">
@@ -34,6 +37,9 @@ export function StoryDetail({ story }: StoryDetailProps) {
     )
   }
 
+  const adaptedMoveToZone = onMoveToZone ? (zone: Zone, resolution?: string, reason?: string) =>
+    onMoveToZone(story.code, zone, resolution, reason) : undefined
+
   return (
     // Two columns, same idea as a GitHub/Jira issue page: primary content
     // (identity, status, description, history) stays narrow and readable on
@@ -45,7 +51,10 @@ export function StoryDetail({ story }: StoryDetailProps) {
     <div className="h-full overflow-hidden grid grid-cols-[1fr_220px]">
       <article className="p-6 overflow-y-auto h-full">
         <header className="mb-6">
-          <p className="font-mono text-xs text-neutral-500 dark:text-neutral-500">{story.code}</p>
+          <div className="flex items-start justify-between gap-2 mb-2">
+            <p className="font-mono text-xs text-neutral-500 dark:text-neutral-500">{story.code}</p>
+            {adaptedMoveToZone && <StoryActionMenu key={story.code} story={story} onMoveToZone={adaptedMoveToZone} />}
+          </div>
           <h1 className="text-xl font-semibold text-neutral-900 dark:text-neutral-50">{story.title}</h1>
           <span
             className={`mt-2 inline-block text-xs px-2 py-1 rounded font-medium ${getStatusColorClasses(story.status)}`}

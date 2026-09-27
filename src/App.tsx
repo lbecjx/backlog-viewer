@@ -10,7 +10,7 @@ import type { Zone } from './lib/computeZone'
 import { tabId, tabPanelId } from './lib/tabIds'
 
 export default function App() {
-  const { stories, loading, error, updateStoryStatus } = useBacklogStories()
+  const { stories, loading, error, updateStoryStatus, moveStoryToZone, actionError, clearActionError } = useBacklogStories()
   const [selectedCode, setSelectedCode] = useState<string | null>(null)
   const [activeTab, setActiveTab] = useState<Zone>('backlog')
 
@@ -64,6 +64,23 @@ export default function App() {
         <Logo />
         <TabBar active={activeTab} onChange={setActiveTab} />
       </header>
+      {/* Action failures surface here, at the App level, because the failing
+          action optimistically changed the story's zone first — which unmounts
+          the component that launched it — so a component-local error would be
+          dropped. See useBacklogStories' `actionError` (and Bug #2 of LB-0003). */}
+      {actionError && (
+        <div className="mx-4 mt-3 flex items-center justify-between gap-3 rounded-md border border-red-300 bg-red-50 px-3 py-2 text-xs text-red-700 dark:border-red-800 dark:bg-red-950/40 dark:text-red-300 shrink-0">
+          <span>Couldn't update the story: {actionError}</span>
+          <button
+            type="button"
+            onClick={clearActionError}
+            aria-label="Dismiss error"
+            className="shrink-0 text-red-500 hover:text-red-700 dark:text-red-400 dark:hover:text-red-200"
+          >
+            ✕
+          </button>
+        </div>
+      )}
       <div className={`flex-1 min-h-0 grid ${isPlanner ? 'grid-cols-1' : 'grid-cols-[360px_1fr]'}`}>
         <Region
           className={`overflow-hidden flex flex-col h-full ${
@@ -77,7 +94,12 @@ export default function App() {
             aria-labelledby={tabId(activeTab)}
           >
             {activeTab === 'backlog' && (
-              <StoryList stories={visibleStories} selectedCode={displayedCode} onSelect={setSelectedCode} />
+              <StoryList
+                stories={visibleStories}
+                selectedCode={displayedCode}
+                onSelect={setSelectedCode}
+                onMoveToZone={moveStoryToZone}
+              />
             )}
             {activeTab === 'planner' && (
               <PlannerBoard
@@ -85,6 +107,7 @@ export default function App() {
                 selectedCode={selectedCode}
                 onSelect={setSelectedCode}
                 onStatusChange={updateStoryStatus}
+                onMoveToZone={moveStoryToZone}
               />
             )}
             {/* Archive reuses StoryList as-is, exactly like Backlog — it's
@@ -97,7 +120,12 @@ export default function App() {
                 Status isn't literally "Done" — the human chose reusing the
                 list wholesale over a separate, near-duplicate component. */}
             {activeTab === 'archive' && (
-              <StoryList stories={visibleStories} selectedCode={displayedCode} onSelect={setSelectedCode} />
+              <StoryList
+                stories={visibleStories}
+                selectedCode={displayedCode}
+                onSelect={setSelectedCode}
+                onMoveToZone={moveStoryToZone}
+              />
             )}
           </div>
           <p
@@ -136,14 +164,14 @@ export default function App() {
         </Region>
         {!isPlanner && (
           <main className="overflow-hidden">
-            <StoryDetail story={displayed} />
+            <StoryDetail story={displayed} onMoveToZone={moveStoryToZone} />
           </main>
         )}
       </div>
       {/* Always mounted, unlike the `<main>` above — the drawer's own open/close
           state drives a slide transition (see StoryDetailDrawer), which needs
           the element to still be in the DOM one frame after `story` clears. */}
-      <StoryDetailDrawer story={isPlanner ? selected : null} onClose={() => setSelectedCode(null)} />
+      <StoryDetailDrawer story={isPlanner ? selected : null} onClose={() => setSelectedCode(null)} onMoveToZone={moveStoryToZone} />
     </div>
   )
 }

@@ -105,4 +105,15 @@ describe('StoryDetailDrawer', () => {
     expect(screen.getByText('Otra story distinta')).toBeInTheDocument()
     expect(screen.queryByText(/Migrar autenticación a OAuth2/)).not.toBeInTheDocument()
   })
+
+  it('shows the action menu when onMoveToZone is provided', () => {
+    const mockMoveToZone = vi.fn()
+    render(<StoryDetailDrawer story={STORY} onClose={vi.fn()} onMoveToZone={mockMoveToZone} />)
+    expect(screen.getByLabelText('Story actions')).toBeInTheDocument()
+  })
+
+  it('does not show the action menu when onMoveToZone is not provided', () => {
+    render(<StoryDetailDrawer story={STORY} onClose={vi.fn()} />)
+    expect(screen.queryByLabelText('Story actions')).not.toBeInTheDocument()
+  })
 })
