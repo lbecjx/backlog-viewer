@@ -98,5 +98,14 @@ export async function discoverStories(baseUrl: string): Promise<DiscoveredStory[
       }
     }),
   )
-  return results.filter((story): story is DiscoveredStory => story !== null)
+  const stories = results.filter((story): story is DiscoveredStory => story !== null)
+  // All-fail is NOT "an empty backlog". If the listing found stories but every
+  // one of them failed to load, surface an error — otherwise a dead server
+  // renders the exact same empty view as a project that genuinely has no
+  // stories, which is worse than the full error this change set out to soften.
+  // A partial success (some loaded) still renders those successes above.
+  if (filenames.length > 0 && stories.length === 0) {
+    throw new Error(`Failed to load any of the ${filenames.length} story file(s) in ${baseUrl}`)
+  }
+  return stories
 }

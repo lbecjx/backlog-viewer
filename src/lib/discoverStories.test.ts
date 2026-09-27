@@ -2,9 +2,11 @@ import { describe, expect, it, vi } from 'vitest'
 import { discoverStories, discoverStoryFilenames, fetchStoryRaw } from './discoverStories'
 
 // Talks to the real `python3 -m http.server` instance spawned by
-// vitest.global-setup.ts (port 8002) against test-fixtures/backlog/ — no
-// mocked fetch. This is the actual mechanism the app uses in production,
-// exercised for real.
+// vitest.global-setup.ts (port 8002) against test-fixtures/backlog/ — the real
+// mechanism the app uses in production, exercised for real. The failure tests
+// below inject a dropped connection through a `fetch` spy that still delegates
+// to the real `fetch` for every other call — a partial spy for one failure,
+// never a fake transport standing in for the whole discovery path.
 const BASE_URL = 'http://localhost:8002/'
 
 describe('discoverStoryFilenames', () => {
@@ -71,6 +73,23 @@ describe('discoverStories', () => {
       expect(stories).toHaveLength(8)
       const recovered = stories.find((s) => s.filename === target)
       expect(recovered?.raw).toContain('MOCK-0002')
+    } finally {
+      spy.mockRestore()
+    }
+  })
+
+  it('rejects when every story fetch fails, instead of rendering an empty backlog', async () => {
+    // A dead/broken connection for every story must surface as an error, not as
+    // "no stories" — an all-fail is a failed load, not an empty project.
+    const realFetch = globalThis.fetch
+    const spy = vi.spyOn(globalThis, 'fetch').mockImplementation(async (input, init) => {
+      const url = typeof input === 'string' ? input : input instanceof URL ? input.href : input.url
+      if (url.endsWith('/')) return realFetch(input, init) // let the directory listing through
+      throw new TypeError('fetch failed: ECONNRESET (injected)')
+    })
+
+    try {
+      await expect(discoverStories(BASE_URL)).rejects.toThrow(/Failed to load any/)
     } finally {
       spy.mockRestore()
     }
