@@ -62,11 +62,11 @@ describe('fetchBacklogStatuses', () => {
 })
 
 describe('fetchBoardMembership', () => {
-  it('fetches and parses the real .backlog-board.json', async () => {
+  it('fetches and parses the real .backlog-board.json (bare codes in both lists)', async () => {
     const membership = await fetchBoardMembership(BASE_URL)
     expect(membership).toEqual({
       planner: ['MOCK-0002'],
-      archive: [{ code: 'MOCK-0001', resolution: 'Done', reason: '' }],
+      archive: ['MOCK-0001'],
     })
   })
 
@@ -86,10 +86,12 @@ describe('fetchBoardMembership', () => {
       ['planner is not an array', { planner: 'MOCK-0001', archive: [] }],
       ['planner has a non-string entry', { planner: [123], archive: [] }],
       ['archive is not an array', { planner: [], archive: {} }],
-      ['archive has an entry with no code', { planner: [], archive: [{ resolution: 'Done', reason: '' }] }],
-      ['archive has an entry with a non-string code', { planner: [], archive: [{ code: 123 }] }],
-      ['archive has an entry with no resolution', { planner: [], archive: [{ code: 'MOCK-0001', reason: '' }] }],
-      ['archive has an entry with no reason', { planner: [], archive: [{ code: 'MOCK-0001', resolution: 'Done' }] }],
+      ['archive holds a pre-LB-0012 {code} object', { planner: [], archive: [{ code: 'MOCK-0001' }] }],
+      [
+        'archive holds the older {code, resolution, reason} object',
+        { planner: [], archive: [{ code: 'MOCK-0001', resolution: 'Done', reason: '' }] },
+      ],
+      ['archive has an entry that is neither a string nor an object', { planner: [], archive: [123] }],
     ])('falls back to empty lists, not a value computeZone would misread, when %s', async (_label, body) => {
       vi.stubGlobal('fetch', vi.fn().mockResolvedValue({ ok: true, json: () => Promise.resolve(body) }))
       expect(await fetchBoardMembership('http://ignored/')).toEqual({ planner: [], archive: [] })
@@ -109,16 +111,13 @@ describe('fetchBoardMembership', () => {
           json: () =>
             Promise.resolve({
               planner: ['MOCK-0001', 123],
-              archive: [
-                { code: 'MOCK-0002', resolution: 'Done', reason: '' },
-                { resolution: 'Cancelled' }, // missing code — malformed
-              ],
+              archive: ['MOCK-0002', { code: 'MOCK-0003' }, { nope: true }],
             }),
         }),
       )
       expect(await fetchBoardMembership('http://ignored/')).toEqual({
         planner: ['MOCK-0001'],
-        archive: [{ code: 'MOCK-0002', resolution: 'Done', reason: '' }],
+        archive: ['MOCK-0002'],
       })
     })
   })

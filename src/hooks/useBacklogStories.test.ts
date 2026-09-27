@@ -525,4 +525,37 @@ describe('useBacklogStories', () => {
       expect(result.current.actionError).toBeNull()
     })
   })
+
+  describe('board membership (the archive regression)', () => {
+    it('resolves an archived story to the archive zone, so it does not show in Backlog', async () => {
+      // The live regression this story closes: the reader rejected real
+      // archive entries, so an archived story fell back to `backlog` and
+      // reappeared in the Backlog list. This drives the real membership file
+      // through the hook into `computeZone` — the reader-to-list path no
+      // other test covered.
+      vi.stubGlobal(
+        'fetch',
+        vi.fn((input: RequestInfo | URL) => {
+          const href = input.toString()
+          if (href.endsWith('/status-colors.json')) return notFound()
+          if (href.endsWith('.backlog-statuses.json')) return notFound()
+          if (href.endsWith('.backlog-board.json')) {
+            return Promise.resolve({
+              ok: true,
+              json: () => Promise.resolve({ planner: [], archive: ['MOCK-0001'] }),
+            })
+          }
+          if (href.endsWith('/backlog/')) return okHtml('<a href="MOCK-0001-a-story.md">MOCK-0001-a-story.md</a>')
+          if (href.endsWith('MOCK-0001-a-story.md')) return okText(RAW_STORY)
+          throw new Error(`unexpected fetch in test: ${href}`)
+        }),
+      )
+
+      const { result } = renderHook(() => useBacklogStories())
+      await waitFor(() => expect(result.current.loading).toBe(false))
+
+      expect(result.current.stories[0].zone).toBe('archive')
+      expect(result.current.stories.filter((s) => s.zone === 'backlog')).toHaveLength(0)
+    })
+  })
 })
