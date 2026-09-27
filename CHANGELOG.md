@@ -4,6 +4,16 @@ All notable changes to this project are documented here. Format loosely follows
 [Keep a Changelog](https://keepachangelog.com/), versioning follows
 [Semantic Versioning](https://semver.org/).
 
+## 0.2.0
+
+- The board's `archive` list is read as bare code strings, matching `planner`.
+  Entries are no longer dropped, so archived stories stay out of the Backlog
+  list.
+- A card's title is struck through if and only if its story has a `Resolution`,
+  instead of whenever it sat in the archive zone. The rule is presence-based,
+  so a new resolution value is honoured with no code change, and the
+  strikethrough applies on every surface that renders a card.
+
 ## 0.1.2
 
 - Story loading no longer fails entirely when a single story fetch drops a
