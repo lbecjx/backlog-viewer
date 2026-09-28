@@ -6,6 +6,8 @@
 | **Type** | Spike |
 | **Priority** | Medium |
 | **Status** | In Progress |
+| **Resolution** |  |
+| **Note** |  |
 | **Labels** | research, css |
 | **Created** | 2026-08-27 |
 | **Updated** | 2026-08-28 |

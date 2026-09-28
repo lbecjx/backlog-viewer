@@ -80,12 +80,11 @@ export function StoryCard({
       </div>
       <p
         className={`mt-1 font-medium text-sm text-neutral-900 dark:text-neutral-100 ${
-          // Keyed off being archived, not off the status text — every
-          // archived story's Status happens to be "Done" today (an
-          // established server-side invariant), but the visual "this is
-          // closed and put away" signal should track the zone directly,
-          // not incidentally match a string.
-          story.zone === 'archive' ? 'line-through opacity-60' : ''
+          // A card is struck through if and only if its story has a
+          // resolution — the only condition. Zone, archive membership and
+          // Status are not consulted: the strikethrough is a visual
+          // consequence of the resolution, in sync with it.
+          story.resolution ? 'line-through opacity-60' : ''
         }`}
       >
         {story.title}

@@ -258,6 +258,37 @@ describe('useBacklogStories', () => {
       expect(result.current.stories[0].status).toBe('Done')
     })
 
+    it('archive: mirrors the resolution onto the story on success, so the strike is right without a reload', async () => {
+      // The card's strikethrough follows the story's resolution, not its zone.
+      // The archive write is what puts a `| **Resolution** |` row on disk, so
+      // the client must mirror it — otherwise a just-archived card reads as
+      // NOT closed (and an unarchived one as closed) until a full reload.
+      vi.stubGlobal('fetch', vi.fn(makeMockFetch(true, true)))
+
+      const { result } = renderHook(() => useBacklogStories())
+      await waitFor(() => expect(result.current.loading).toBe(false))
+      expect(result.current.stories[0].resolution).toBeUndefined()
+
+      await act(() => result.current.moveStoryToZone('MOCK-0001', 'archive', "Won't Do", ''))
+
+      expect(result.current.stories[0].resolution).toBe("Won't Do")
+      expect(result.current.stories[0].status).toBe('Done')
+    })
+
+    it('archive: does not mirror a resolution when the write fails', async () => {
+      vi.stubGlobal('fetch', vi.fn(makeMockFetch(true, false)))
+
+      const { result } = renderHook(() => useBacklogStories())
+      await waitFor(() => expect(result.current.loading).toBe(false))
+
+      await act(async () => {
+        await expect(result.current.moveStoryToZone('MOCK-0001', 'archive', 'Done', '')).rejects.toThrow('board failed')
+      })
+
+      expect(result.current.stories[0].resolution).toBeUndefined()
+      expect(result.current.stories[0].status).toBe('Not Started')
+    })
+
     it('move: preserves a non-Done status (does not reset it to Not Started)', async () => {
       const inProgressStory = RAW_STORY.replace('| **Status** | Not Started |', '| **Status** | In Progress |')
       const fetchMock = vi.fn((input: RequestInfo | URL) => {
@@ -523,6 +554,39 @@ describe('useBacklogStories', () => {
 
       await act(() => result.current.clearActionError())
       expect(result.current.actionError).toBeNull()
+    })
+  })
+
+  describe('board membership (the archive regression)', () => {
+    it('resolves an archived story to the archive zone, so it does not show in Backlog', async () => {
+      // The live regression this story closes: the reader rejected real
+      // archive entries, so an archived story fell back to `backlog` and
+      // reappeared in the Backlog list. This drives the real membership file
+      // through the hook into `computeZone` — the reader-to-list path no
+      // other test covered.
+      vi.stubGlobal(
+        'fetch',
+        vi.fn((input: RequestInfo | URL) => {
+          const href = input.toString()
+          if (href.endsWith('/status-colors.json')) return notFound()
+          if (href.endsWith('.backlog-statuses.json')) return notFound()
+          if (href.endsWith('.backlog-board.json')) {
+            return Promise.resolve({
+              ok: true,
+              json: () => Promise.resolve({ planner: [], archive: ['MOCK-0001'] }),
+            })
+          }
+          if (href.endsWith('/backlog/')) return okHtml('<a href="MOCK-0001-a-story.md">MOCK-0001-a-story.md</a>')
+          if (href.endsWith('MOCK-0001-a-story.md')) return okText(RAW_STORY)
+          throw new Error(`unexpected fetch in test: ${href}`)
+        }),
+      )
+
+      const { result } = renderHook(() => useBacklogStories())
+      await waitFor(() => expect(result.current.loading).toBe(false))
+
+      expect(result.current.stories[0].zone).toBe('archive')
+      expect(result.current.stories.filter((s) => s.zone === 'backlog')).toHaveLength(0)
     })
   })
 })

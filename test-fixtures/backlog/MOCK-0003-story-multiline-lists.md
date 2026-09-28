@@ -6,6 +6,8 @@
 | **Type** | Story |
 | **Priority** | High |
 | **Status** | Not Started |
+| **Resolution** |  |
+| **Note** |  |
 | **Labels** | checkout, ui, conversion |
 | **Created** | 2026-08-15 |
 | **Updated** | 2026-08-15 |

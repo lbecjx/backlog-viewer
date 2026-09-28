@@ -6,6 +6,8 @@
 | **Type** | Bug |
 | **Priority** | High |
 | **Status** | Not Started |
+| **Resolution** |  |
+| **Note** |  |
 | **Labels** | search, bug, regression, viewer, high-priority, ux |
 | **Created** | 2026-08-29 |
 | **Updated** | 2026-08-29 |

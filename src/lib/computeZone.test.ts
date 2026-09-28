@@ -17,7 +17,7 @@ describe('computeZone', () => {
   it('returns archive for a code in the archive list', () => {
     const membership: BoardMembership = {
       planner: [],
-      archive: [{ code: 'MOCK-0001', resolution: 'Done', reason: '' }],
+      archive: ['MOCK-0001'],
     }
     expect(computeZone('MOCK-0001', membership)).toBe('archive')
   })
@@ -25,7 +25,7 @@ describe('computeZone', () => {
   it('resolves to archive when a code is in both lists (same precedence as set-board.sh)', () => {
     const membership: BoardMembership = {
       planner: ['MOCK-0001'],
-      archive: [{ code: 'MOCK-0001', resolution: 'Done', reason: '' }],
+      archive: ['MOCK-0001'],
     }
     expect(computeZone('MOCK-0001', membership)).toBe('archive')
   })
@@ -37,7 +37,7 @@ describe('computeZone', () => {
     // never looked up here, not an error condition.
     const membership: BoardMembership = {
       planner: ['MOCK-9999'],
-      archive: [{ code: 'MOCK-8888', resolution: 'Done', reason: '' }],
+      archive: ['MOCK-8888'],
     }
     expect(computeZone('MOCK-0001', membership)).toBe('backlog')
   })
