@@ -35,7 +35,7 @@ async function waitUntilReady(): Promise<void> {
 export async function setup() {
   server = spawn(
     'python3',
-    ['-m', 'http.server', String(TEST_SERVER_PORT), '--directory', 'test-fixtures/backlog'],
+    ['-m', 'http.server', String(TEST_SERVER_PORT), '--directory', 'test-fixtures/local-backlog'],
     { stdio: 'ignore' },
   )
   await new Promise<void>((resolve, reject) => {

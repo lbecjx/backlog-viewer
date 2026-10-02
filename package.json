@@ -1,12 +1,12 @@
 {
   "name": "backlog-viewer",
   "private": true,
-  "version": "0.2.0",
+  "version": "0.3.0",
   "license": "GPL-3.0-or-later",
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "dev:server": "python3 -m http.server 8001 --directory test-fixtures/backlog",
+    "dev:server": "python3 -m http.server 8001 --directory test-fixtures/local-backlog",
     "test": "vitest run",
     "build": "tsc -b && vite build",
     "lint": "oxlint",
