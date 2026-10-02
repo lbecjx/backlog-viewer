@@ -9,11 +9,16 @@ import { useBacklogStories } from './hooks/useBacklogStories'
 // real fetch failure through App would test the hook, not the banner.
 vi.mock('./hooks/useBacklogStories')
 
-function mockHook(overrides: { actionError: string | null; clearActionError?: () => void }) {
+function mockHook(overrides: {
+  actionError: string | null
+  clearActionError?: () => void
+  projectName?: string | null
+}) {
   vi.mocked(useBacklogStories).mockReturnValue({
     stories: [],
     loading: false,
     error: null,
+    projectName: overrides.projectName ?? null,
     updateStoryStatus: vi.fn(),
     moveStoryToZone: vi.fn(),
     actionError: overrides.actionError,
@@ -38,5 +43,28 @@ describe('App', () => {
     mockHook({ actionError: null })
     render(<App />)
     expect(screen.queryByRole('button', { name: 'Dismiss error' })).not.toBeInTheDocument()
+  })
+
+  describe('header project name', () => {
+    it('shows the project name when present', () => {
+      mockHook({ actionError: null, projectName: 'backlog-viewer' })
+      render(<App />)
+      expect(screen.getByText('backlog-viewer')).toBeInTheDocument()
+    })
+
+    it('shows nothing extra when the project name is null (missing/unreachable project.json)', () => {
+      mockHook({ actionError: null, projectName: null })
+      render(<App />)
+      // The brand mark and tabs still render; just no extra name text.
+      expect(screen.getByText('Backlog Viewer')).toBeInTheDocument()
+      expect(screen.queryByTitle(/.+/)).not.toBeInTheDocument()
+    })
+
+    it('does not break rendering with a very long project name', () => {
+      const longName = 'a'.repeat(200)
+      mockHook({ actionError: null, projectName: longName })
+      render(<App />)
+      expect(screen.getByText(longName)).toBeInTheDocument()
+    })
   })
 })

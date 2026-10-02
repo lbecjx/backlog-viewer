@@ -10,7 +10,8 @@ import type { Zone } from './lib/computeZone'
 import { tabId, tabPanelId } from './lib/tabIds'
 
 export default function App() {
-  const { stories, loading, error, updateStoryStatus, moveStoryToZone, actionError, clearActionError } = useBacklogStories()
+  const { stories, loading, error, projectName, updateStoryStatus, moveStoryToZone, actionError, clearActionError } =
+    useBacklogStories()
   const [selectedCode, setSelectedCode] = useState<string | null>(null)
   const [activeTab, setActiveTab] = useState<Zone>('backlog')
 
@@ -60,9 +61,24 @@ export default function App() {
           width — previously Logo sat above TabBar, both stacked inside
           whichever narrow/full-width region the active tab used, which
           meant Planner's full-width board had no visible nav bar above it. */}
-      <header className="flex items-center gap-6 px-4 py-2.5 border-b border-neutral-200 dark:border-neutral-800 shrink-0">
+      <header className="relative flex items-center gap-6 px-4 py-2.5 border-b border-neutral-200 dark:border-neutral-800 shrink-0">
         <Logo />
         <TabBar active={activeTab} onChange={setActiveTab} />
+        {/* Absolutely centered across the full header width, independent of
+            Logo/TabBar's own flex flow — identifies which project's backlog
+            this viewer is serving, for a human with several of these open at
+            once (one per project, each on its own port). `null` (no
+            project.json — an older plugin version, or a genuine fetch
+            failure) renders nothing extra, not an error. `max-w-[40%]` +
+            `truncate` keep a long name from overlapping the tabs or brand. */}
+        {projectName && (
+          <p
+            className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 max-w-[40%] truncate text-sm text-neutral-500 dark:text-neutral-400 pointer-events-none"
+            title={projectName}
+          >
+            {projectName}
+          </p>
+        )}
       </header>
       {/* Action failures surface here, at the App level, because the failing
           action optimistically changed the story's zone first — which unmounts
