@@ -5,8 +5,8 @@ import { useBacklogStories } from './useBacklogStories'
 // Same exception as loadStatusPalette.test.ts and boardWrites.test.ts: this
 // hook's discovery/config fetches resolve against the app's own served root
 // (window.location.origin), which has no real server to point at in this
-// test environment — only the real per-project /backlog/ mock server
-// (test-fixtures/backlog/, port 8002) does, and that's a different origin.
+// test environment — only the real per-project /local-backlog/ mock server
+// (test-fixtures/local-backlog/, port 8002) does, and that's a different origin.
 // Mocked fetch, routed by URL, is the only option. This test only covers
 // `updateStoryStatus` — discovery and parsing are already covered for real
 // in discoverStories.test.ts / parseStory.test.ts.
@@ -44,7 +44,7 @@ function makeMockFetch(statusEndpointOk: boolean = true, boardEndpointOk: boolea
     if (href.endsWith('/status-colors.json')) return notFound()
     if (href.endsWith('.backlog-statuses.json')) return notFound()
     if (href.endsWith('.backlog-board.json')) return notFound()
-    if (href.endsWith('/backlog/')) return okHtml('<a href="MOCK-0001-a-story.md">MOCK-0001-a-story.md</a>')
+    if (href.endsWith('/local-backlog/')) return okHtml('<a href="MOCK-0001-a-story.md">MOCK-0001-a-story.md</a>')
     if (href.endsWith('MOCK-0001-a-story.md')) return okText(RAW_STORY)
     if (href.endsWith('/api/status')) {
       return statusEndpointOk
@@ -105,7 +105,7 @@ describe('useBacklogStories', () => {
         if (href.endsWith('/status-colors.json')) return notFound()
         if (href.endsWith('.backlog-statuses.json')) return notFound()
         if (href.endsWith('.backlog-board.json')) return notFound()
-        if (href.endsWith('/backlog/')) return okHtml('<a href="MOCK-0001-a-story.md">MOCK-0001-a-story.md</a>')
+        if (href.endsWith('/local-backlog/')) return okHtml('<a href="MOCK-0001-a-story.md">MOCK-0001-a-story.md</a>')
         if (href.endsWith('MOCK-0001-a-story.md')) return okText(RAW_STORY)
         if (href.endsWith('/api/status')) {
           statusCallCount += 1
@@ -321,7 +321,7 @@ describe('useBacklogStories', () => {
         if (href.endsWith('/status-colors.json')) return notFound()
         if (href.endsWith('.backlog-statuses.json')) return notFound()
         if (href.endsWith('.backlog-board.json')) return notFound()
-        if (href.endsWith('/backlog/')) return okHtml('<a href="MOCK-0001-a-story.md">MOCK-0001-a-story.md</a>')
+        if (href.endsWith('/local-backlog/')) return okHtml('<a href="MOCK-0001-a-story.md">MOCK-0001-a-story.md</a>')
         if (href.endsWith('MOCK-0001-a-story.md')) return okText(RAW_STORY)
         if (href.endsWith('/api/board')) {
           boardCallCount += 1
@@ -374,7 +374,7 @@ describe('useBacklogStories', () => {
         if (href.endsWith('/status-colors.json')) return notFound()
         if (href.endsWith('.backlog-statuses.json')) return notFound()
         if (href.endsWith('.backlog-board.json')) return notFound()
-        if (href.endsWith('/backlog/')) return okHtml('<a href="MOCK-0001-a-story.md">MOCK-0001-a-story.md</a>')
+        if (href.endsWith('/local-backlog/')) return okHtml('<a href="MOCK-0001-a-story.md">MOCK-0001-a-story.md</a>')
         if (href.endsWith('MOCK-0001-a-story.md')) return okText(RAW_STORY)
         if (href.endsWith('/api/board')) {
           boardCallCount += 1
@@ -442,7 +442,7 @@ describe('useBacklogStories', () => {
         if (href.endsWith('/status-colors.json')) return notFound()
         if (href.endsWith('.backlog-statuses.json')) return notFound()
         if (href.endsWith('.backlog-board.json')) return notFound()
-        if (href.endsWith('/backlog/')) return okHtml('<a href="MOCK-0001-a-story.md">MOCK-0001-a-story.md</a>')
+        if (href.endsWith('/local-backlog/')) return okHtml('<a href="MOCK-0001-a-story.md">MOCK-0001-a-story.md</a>')
         if (href.endsWith('MOCK-0001-a-story.md')) return okText(RAW_STORY)
         if (href.endsWith('/api/status')) {
           statusCallCount += 1
@@ -499,7 +499,7 @@ describe('useBacklogStories', () => {
         if (href.endsWith('/status-colors.json')) return notFound()
         if (href.endsWith('.backlog-statuses.json')) return notFound()
         if (href.endsWith('.backlog-board.json')) return notFound()
-        if (href.endsWith('/backlog/')) return okHtml('<a href="MOCK-0001-a-story.md">MOCK-0001-a-story.md</a>')
+        if (href.endsWith('/local-backlog/')) return okHtml('<a href="MOCK-0001-a-story.md">MOCK-0001-a-story.md</a>')
         if (href.endsWith('MOCK-0001-a-story.md')) return okText(RAW_STORY)
         if (href.endsWith('/api/board')) {
           return boardShouldFail
@@ -535,7 +535,7 @@ describe('useBacklogStories', () => {
         if (href.endsWith('/status-colors.json')) return notFound()
         if (href.endsWith('.backlog-statuses.json')) return notFound()
         if (href.endsWith('.backlog-board.json')) return notFound()
-        if (href.endsWith('/backlog/')) return okHtml('<a href="MOCK-0001-a-story.md">MOCK-0001-a-story.md</a>')
+        if (href.endsWith('/local-backlog/')) return okHtml('<a href="MOCK-0001-a-story.md">MOCK-0001-a-story.md</a>')
         if (href.endsWith('MOCK-0001-a-story.md')) return okText(RAW_STORY)
         if (href.endsWith('/api/board')) {
           return Promise.resolve({ ok: false, status: 500, json: () => Promise.resolve({ error: 'board failed' }) })
@@ -576,7 +576,7 @@ describe('useBacklogStories', () => {
               json: () => Promise.resolve({ planner: [], archive: ['MOCK-0001'] }),
             })
           }
-          if (href.endsWith('/backlog/')) return okHtml('<a href="MOCK-0001-a-story.md">MOCK-0001-a-story.md</a>')
+          if (href.endsWith('/local-backlog/')) return okHtml('<a href="MOCK-0001-a-story.md">MOCK-0001-a-story.md</a>')
           if (href.endsWith('MOCK-0001-a-story.md')) return okText(RAW_STORY)
           throw new Error(`unexpected fetch in test: ${href}`)
         }),

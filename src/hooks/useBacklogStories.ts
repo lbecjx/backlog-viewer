@@ -42,7 +42,7 @@ interface UseBacklogStoriesResult {
 // current origin so this works both in dev (proxied to the mock server, see
 // vite.config.ts) and once bundled into the published plugin's dist/.
 function getBacklogBaseUrl(): string {
-  return new URL('/backlog/', window.location.origin).toString()
+  return new URL('/local-backlog/', window.location.origin).toString()
 }
 
 export function useBacklogStories(): UseBacklogStoriesResult {

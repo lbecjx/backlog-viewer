@@ -13,8 +13,10 @@ dist-ssr
 *.local
 
 # local-backlog plugin files (https://github.com/lbecjx/local-backlog) —
-# gitignored per this project's own choice, see local-backlog/.backlog-config.json
-local-backlog/
+# gitignored per this project's own choice, see local-backlog/.backlog-config.json.
+# Anchored to the project root: unanchored it would also match
+# test-fixtures/local-backlog/, which IS tracked (BV-0001).
+/local-backlog/
 
 # workflow-dev's own persistent context — private, per-machine, regenerable
 # agent working memory, gitignored per this project's own choice, see

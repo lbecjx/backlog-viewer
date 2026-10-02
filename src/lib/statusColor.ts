@@ -40,7 +40,7 @@ let knownStatusBorders = new Map<string, string>()
 let knownStatusOrder: string[] = DEFAULT_STATUSES.map((s) => s.name)
 
 // Fetched once, from the same served root as the app itself (not the
-// per-project `/backlog/` folder — this is a fixed, project-independent
+// per-project `/local-backlog/` folder — this is a fixed, project-independent
 // asset). Failure here (network error, missing file, malformed JSON)
 // resolves to an empty palette, which makes every status render as
 // "unknown" — visible and debuggable, not a silent crash or a rejection the

@@ -4,6 +4,15 @@ All notable changes to this project are documented here. Format loosely follows
 [Keep a Changelog](https://keepachangelog.com/), versioning follows
 [Semantic Versioning](https://semver.org/).
 
+## 0.3.0
+
+- The viewer now fetches the backlog from `/local-backlog/` instead of the
+  hardcoded `/backlog/` path, matching the `local-backlog` plugin's own
+  consumer-facing folder name. The dev/test mock fixtures directory
+  (`test-fixtures/backlog/`) is renamed to `test-fixtures/local-backlog/` to
+  match. No functional or visual change — this is an internal HTTP path
+  contract update between the plugin and its vendored viewer build.
+
 ## 0.2.0
 
 - The board's `archive` list is read as bare code strings, matching `planner`.

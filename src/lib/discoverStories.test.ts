@@ -2,7 +2,7 @@ import { describe, expect, it, vi } from 'vitest'
 import { discoverStories, discoverStoryFilenames, fetchStoryRaw } from './discoverStories'
 
 // Talks to the real `python3 -m http.server` instance spawned by
-// vitest.global-setup.ts (port 8002) against test-fixtures/backlog/ — the real
+// vitest.global-setup.ts (port 8002) against test-fixtures/local-backlog/ — the real
 // mechanism the app uses in production, exercised for real. The failure tests
 // below inject a dropped connection through a `fetch` spy that still delegates
 // to the real `fetch` for every other call — a partial spy for one failure,
