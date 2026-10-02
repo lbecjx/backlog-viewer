@@ -24,6 +24,26 @@ describe('postStoryStatus', () => {
     expect(JSON.parse(init.body as string)).toEqual({ code: 'MOCK-0002', status: 'Done' })
   })
 
+  it('includes the note in the body when one is given', async () => {
+    const fetchMock = vi.fn().mockResolvedValue({ ok: true, json: () => Promise.resolve({ result: 'ok' }) })
+    vi.stubGlobal('fetch', fetchMock)
+
+    await postStoryStatus('http://localhost:8001', 'MOCK-0002', 'Done', 'Finished early')
+
+    const [, init] = fetchMock.mock.calls[0] as [URL, RequestInit]
+    expect(JSON.parse(init.body as string)).toEqual({ code: 'MOCK-0002', status: 'Done', note: 'Finished early' })
+  })
+
+  it('omits the note from the body when none is given', async () => {
+    const fetchMock = vi.fn().mockResolvedValue({ ok: true, json: () => Promise.resolve({ result: 'ok' }) })
+    vi.stubGlobal('fetch', fetchMock)
+
+    await postStoryStatus('http://localhost:8001', 'MOCK-0002', 'Done')
+
+    const [, init] = fetchMock.mock.calls[0] as [URL, RequestInit]
+    expect(JSON.parse(init.body as string)).not.toHaveProperty('note')
+  })
+
   it('resolves without throwing on a 200 response', async () => {
     vi.stubGlobal('fetch', vi.fn().mockResolvedValue({ ok: true, json: () => Promise.resolve({ result: 'ok' }) }))
     await expect(postStoryStatus('http://localhost:8001', 'MOCK-0002', 'Done')).resolves.toBeUndefined()

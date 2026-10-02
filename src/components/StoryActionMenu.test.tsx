@@ -12,6 +12,7 @@ function makeStory(overrides: Partial<BacklogStory>): BacklogStory {
     priority: 'Medium',
     status: 'Not Started',
     resolution: undefined,
+    note: undefined,
     labels: [],
     created: '2026-08-01',
     updated: '2026-08-01',
@@ -122,6 +123,20 @@ describe('StoryActionMenu', () => {
     await user.click(confirmButton)
 
     expect(onMoveToZone).toHaveBeenCalledWith('archive', 'Done', '')
+  })
+
+  it('labels the archive dialog\'s free-text field "Note", not "Reason"', async () => {
+    const user = userEvent.setup()
+    const story = makeStory({ zone: 'backlog' })
+    render(<StoryActionMenu story={story} onMoveToZone={vi.fn()} />)
+
+    await user.click(screen.getByRole('button', { name: 'Story actions' }))
+    const allButtons = screen.getAllByRole('button')
+    const archiveMenuItem = allButtons.find((b) => b.textContent === 'Archive' && b.className.includes('text-left'))!
+    await user.click(archiveMenuItem)
+
+    expect(screen.getByLabelText('Note (optional)')).toBeInTheDocument()
+    expect(screen.queryByText('Reason (optional)')).not.toBeInTheDocument()
   })
 
   it('offers Won\'t Do (not Cancelled/Postponed) as the non-Done resolution, matching the server contract', async () => {

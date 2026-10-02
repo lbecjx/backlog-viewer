@@ -11,6 +11,7 @@ const STORY: BacklogStory = {
   priority: 'High',
   status: 'In Progress',
   resolution: undefined,
+  note: undefined,
   labels: ['export', 'ui'],
   created: '2026-08-01',
   updated: '2026-08-05',
@@ -55,6 +56,26 @@ describe('StoryDetail', () => {
     render(<StoryDetail story={{ ...STORY, labels: [] }} />)
     expect(screen.queryByText('Labels')).not.toBeInTheDocument()
     expect(screen.queryByText('export')).not.toBeInTheDocument()
+  })
+
+  it('shows Resolution and Note when both are present', () => {
+    render(<StoryDetail story={{ ...STORY, resolution: 'Done', note: 'Shipped ahead of schedule' }} />)
+    expect(screen.getByText('Resolution')).toBeInTheDocument()
+    expect(screen.getByText('Done')).toBeInTheDocument()
+    expect(screen.getByText('Note')).toBeInTheDocument()
+    expect(screen.getByText('Shipped ahead of schedule')).toBeInTheDocument()
+  })
+
+  it('does not render Resolution or Note when both are absent', () => {
+    render(<StoryDetail story={{ ...STORY, resolution: undefined, note: undefined }} />)
+    expect(screen.queryByText('Resolution')).not.toBeInTheDocument()
+    expect(screen.queryByText('Note')).not.toBeInTheDocument()
+  })
+
+  it('does not render Resolution or Note when both are present-but-empty rows', () => {
+    render(<StoryDetail story={{ ...STORY, resolution: '', note: '' }} />)
+    expect(screen.queryByText('Resolution')).not.toBeInTheDocument()
+    expect(screen.queryByText('Note')).not.toBeInTheDocument()
   })
 
   it('shows the action menu when onMoveToZone is provided', () => {

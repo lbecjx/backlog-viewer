@@ -4,6 +4,16 @@ All notable changes to this project are documented here. Format loosely follows
 [Keep a Changelog](https://keepachangelog.com/), versioning follows
 [Semantic Versioning](https://semver.org/).
 
+## 0.4.0
+
+- Any status change made in the Planner (dragging a card between columns) can
+  now carry an optional note explaining why, via a small confirmation dialog —
+  left blank, the change proceeds with no note, same as before.
+- A story's current `Resolution` and `Note` are now shown in the detail
+  panel's sidebar, alongside `Status`, whenever present.
+- The archive dialog's "Reason (optional)" field is now labeled
+  "Note (optional)", matching the single note concept used everywhere else.
+
 ## 0.3.0
 
 - The viewer now fetches the backlog from `/local-backlog/` instead of the

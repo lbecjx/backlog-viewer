@@ -17,11 +17,11 @@ async function parseErrorMessage(res: Response, fallback: string): Promise<strin
     : fallback
 }
 
-export async function postStoryStatus(origin: string, code: string, status: string): Promise<void> {
+export async function postStoryStatus(origin: string, code: string, status: string, note?: string): Promise<void> {
   const res = await fetch(new URL('/api/status', origin), {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ code, status }),
+    body: JSON.stringify({ code, status, note }),
   })
   if (res.ok) return
 

@@ -78,6 +78,33 @@ describe('useBacklogStories', () => {
       expect(result.current.stories[0].status).toBe('Done')
     })
 
+    it('forwards an optional note to the server, and omits it when not given', async () => {
+      const postedBodies: unknown[] = []
+      const fetchMock = vi.fn((input: RequestInfo | URL, init?: RequestInit) => {
+        const href = input.toString()
+        if (href.endsWith('/status-colors.json')) return notFound()
+        if (href.endsWith('.backlog-statuses.json')) return notFound()
+        if (href.endsWith('.backlog-board.json')) return notFound()
+        if (href.endsWith('/local-backlog/')) return okHtml('<a href="MOCK-0001-a-story.md">MOCK-0001-a-story.md</a>')
+        if (href.endsWith('MOCK-0001-a-story.md')) return okText(RAW_STORY)
+        if (href.endsWith('/api/status')) {
+          postedBodies.push(JSON.parse(init?.body as string))
+          return Promise.resolve({ ok: true, json: () => Promise.resolve({ result: 'ok' }) })
+        }
+        throw new Error(`unexpected fetch in test: ${href}`)
+      })
+      vi.stubGlobal('fetch', fetchMock)
+
+      const { result } = renderHook(() => useBacklogStories())
+      await waitFor(() => expect(result.current.loading).toBe(false))
+
+      await act(() => result.current.updateStoryStatus('MOCK-0001', 'Done', 'Finished early'))
+      await act(() => result.current.updateStoryStatus('MOCK-0001', 'In Progress'))
+
+      expect(postedBodies[0]).toEqual({ code: 'MOCK-0001', status: 'Done', note: 'Finished early' })
+      expect(postedBodies[1]).not.toHaveProperty('note')
+    })
+
     it('reverts the local change when the server call fails', async () => {
       vi.stubGlobal('fetch', vi.fn(makeMockFetch(false)))
 

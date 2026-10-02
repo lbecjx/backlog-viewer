@@ -1,7 +1,8 @@
-import { useMemo, useState, type DragEvent } from 'react'
+import { useMemo, useRef, useState, type DragEvent } from 'react'
 import type { BacklogStory } from '../hooks/useBacklogStories'
 import { getConfiguredStatuses } from '../lib/statusColor'
 import type { Zone } from '../lib/computeZone'
+import { ConfirmDialog } from './ConfirmDialog'
 import { StoryCard } from './StoryCard'
 
 interface PlannerBoardProps {
@@ -11,7 +12,7 @@ interface PlannerBoardProps {
   // Persists a status change (see useBacklogStories' updateStoryStatus) —
   // already optimistic-with-rollback on its own side; this component only
   // needs to call it and surface a failure, not manage the revert itself.
-  onStatusChange: (code: string, status: string) => Promise<void>
+  onStatusChange: (code: string, status: string, note?: string) => Promise<void>
   onMoveToZone?: (code: string, zone: Zone, resolution?: string, reason?: string) => Promise<void>
 }
 
@@ -30,6 +31,20 @@ export function PlannerBoard({ stories, selectedCode, onSelect, onStatusChange, 
   const [draggedCode, setDraggedCode] = useState<string | null>(null)
   const [dropTargetStatus, setDropTargetStatus] = useState<string | null>(null)
   const [dragError, setDragError] = useState<string | null>(null)
+  // Set the moment a drop lands, cleared once the note dialog is confirmed or
+  // cancelled. Nothing has been written to the server yet at this point — no
+  // optimistic update has happened — so cancelling is free, unlike the
+  // archive/move dialogs in StoryActionMenu, which gate a different write.
+  const [pendingDrop, setPendingDrop] = useState<{ code: string; targetStatus: string } | null>(null)
+  const [note, setNote] = useState('')
+  const [submittingNote, setSubmittingNote] = useState(false)
+  // Bumped on every new drop and on cancel, same pattern as StoryActionMenu's
+  // own sessionTokenRef. Found by adversarial review: without it, a confirm
+  // whose request is still in flight when the human cancels that dialog and
+  // opens a SECOND one (a different story, or the same one again) would, once
+  // the stale request settles, blindly clear whatever dialog/note is open
+  // *now* — closing the second dialog and discarding its unsent note.
+  const dropTokenRef = useRef(0)
 
   function handleDragStart(event: DragEvent<HTMLDivElement>, code: string) {
     // Required for Firefox to permit the drag gesture at all — some data
@@ -52,9 +67,47 @@ export function PlannerBoard({ stories, selectedCode, onSelect, onStatusChange, 
     const story = stories.find((s) => s.code === code)
     if (!story || story.status === targetStatus) return // no-op: dropped back on its own column
 
-    onStatusChange(code, targetStatus).catch((err: unknown) => {
-      setDragError(err instanceof Error ? err.message : String(err))
-    })
+    dropTokenRef.current += 1
+    setPendingDrop({ code, targetStatus })
+  }
+
+  function handleConfirmNote() {
+    if (!pendingDrop || submittingNote) return
+    const { code, targetStatus } = pendingDrop
+    const token = dropTokenRef.current
+    setSubmittingNote(true)
+    // Collapse internal newlines and trim surrounding whitespace: the note
+    // ends up on a single Markdown table row (`| **Note** | ... |`) and a
+    // single History line segment (` · Note: ... `), both of which a raw
+    // newline would break. Found by adversarial review.
+    const sanitizedNote = note.trim().replace(/\r?\n+/g, ' ') || undefined
+    onStatusChange(code, targetStatus, sanitizedNote)
+      .then(() => {
+        if (dropTokenRef.current !== token) return // superseded — a newer drop is open now
+        setPendingDrop(null)
+        setNote('')
+      })
+      .catch((err: unknown) => {
+        if (dropTokenRef.current !== token) return
+        setPendingDrop(null)
+        setNote('')
+        setDragError(err instanceof Error ? err.message : String(err))
+      })
+      .finally(() => {
+        if (dropTokenRef.current === token) setSubmittingNote(false)
+      })
+  }
+
+  function handleCancelNote() {
+    dropTokenRef.current += 1
+    setPendingDrop(null)
+    setNote('')
+    // Reset unconditionally, not just when nothing is in flight: cancelling
+    // while a confirm's request is still pending must not leave this stuck
+    // true forever — the stale request's own `.finally` above is guarded by
+    // the token check and will no-op once it settles. Found by adversarial
+    // review (the token guard alone fixed the race but left this stuck).
+    setSubmittingNote(false)
   }
 
   // Memoized: recomputing every column's `stories.filter` on each render — and
@@ -189,6 +242,33 @@ export function PlannerBoard({ stories, selectedCode, onSelect, onStatusChange, 
           )
         })}
       </div>
+
+      {pendingDrop && (
+        <ConfirmDialog
+          open
+          title={`Move to ${pendingDrop.targetStatus}?`}
+          message="You can leave a short note explaining the change, or leave it blank."
+          confirmLabel="Move"
+          cancelLabel="Cancel"
+          onConfirm={handleConfirmNote}
+          onCancel={handleCancelNote}
+          confirmDisabled={submittingNote}
+        >
+          <div>
+            <label htmlFor="status-note-textarea" className="text-xs font-semibold uppercase text-neutral-600 dark:text-neutral-400">
+              Note (optional)
+            </label>
+            <textarea
+              id="status-note-textarea"
+              value={note}
+              onChange={(e) => setNote(e.target.value)}
+              placeholder="Why is this moving?"
+              className="mt-1 w-full rounded border border-neutral-300 dark:border-neutral-700 bg-white dark:bg-neutral-800 px-3 py-2 text-sm text-neutral-900 dark:text-neutral-100 placeholder-neutral-500 dark:placeholder-neutral-500"
+              rows={3}
+            />
+          </div>
+        </ConfirmDialog>
+      )}
     </div>
   )
 }

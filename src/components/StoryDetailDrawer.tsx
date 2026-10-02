@@ -99,6 +99,18 @@ export function StoryDetailDrawer({ story, onClose, onMoveToZone }: StoryDetailD
                 <span className="text-xs text-neutral-700 dark:text-neutral-300">{shown.priority}</span>
               </DrawerMetaField>
 
+              {shown.resolution && (
+                <DrawerMetaField label="Resolution">
+                  <span className="text-xs text-neutral-700 dark:text-neutral-300">{shown.resolution}</span>
+                </DrawerMetaField>
+              )}
+
+              {shown.note && (
+                <DrawerMetaField label="Note">
+                  <span className="text-xs text-neutral-700 dark:text-neutral-300">{shown.note}</span>
+                </DrawerMetaField>
+              )}
+
               {shown.progress && (
                 <DrawerMetaField label="Progress">
                   <span className="text-xs text-neutral-700 dark:text-neutral-300">

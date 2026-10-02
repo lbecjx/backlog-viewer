@@ -78,6 +78,18 @@ export function StoryDetail({ story, onMoveToZone }: StoryDetailProps) {
           <span className="text-sm text-neutral-700 dark:text-neutral-300">{story.priority}</span>
         </MetadataField>
 
+        {story.resolution && (
+          <MetadataField label="Resolution">
+            <span className="text-sm text-neutral-700 dark:text-neutral-300">{story.resolution}</span>
+          </MetadataField>
+        )}
+
+        {story.note && (
+          <MetadataField label="Note">
+            <span className="text-sm text-neutral-700 dark:text-neutral-300">{story.note}</span>
+          </MetadataField>
+        )}
+
         {story.progress && (
           <MetadataField label="Progress">
             <span className="text-sm text-neutral-700 dark:text-neutral-300">

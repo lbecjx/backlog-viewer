@@ -21,7 +21,7 @@ interface UseBacklogStoriesResult {
   // server. On failure, reverts the local change and rethrows — the caller
   // (a drag-and-drop drop handler) decides how to surface that to the human,
   // this hook only owns the story data itself.
-  updateStoryStatus: (code: string, status: string) => Promise<void>
+  updateStoryStatus: (code: string, status: string, note?: string) => Promise<void>
   // Moves a story to a different zone (backlog/planner/archive) with optional
   // resolution (for archive) and reason. Implements optimistic updates with
   // stale-rollback race protection.
@@ -116,14 +116,14 @@ export function useBacklogStories(): UseBacklogStoriesResult {
     }
   }, [])
 
-  async function updateStoryStatus(code: string, status: string): Promise<void> {
+  async function updateStoryStatus(code: string, status: string, note?: string): Promise<void> {
     const previousStatus = stories.find((s) => s.code === code)?.status
     if (previousStatus === undefined) return
 
     const version = nextWriteVersion(code, 'status')
     setStories((current) => current.map((s) => (s.code === code ? { ...s, status } : s)))
     try {
-      await postStoryStatus(window.location.origin, code, status)
+      await postStoryStatus(window.location.origin, code, status, note)
     } catch (err) {
       // Revert only if THIS call's write is still the latest for that field.
       // A newer call — which may have even written the SAME value, so a
