@@ -51,7 +51,7 @@ export function StoryActionMenu({ story, onMoveToZone }: StoryActionMenuProps) {
   // just clears the pending unmount and re-syncs.
   const [mountedDialog, setMountedDialog] = useState<{ action: DialogAction } | null>(null)
   const [resolution, setResolution] = useState('Done')
-  const [reason, setReason] = useState('')
+  const [note, setNote] = useState('')
   const [submitting, setSubmitting] = useState(false)
   const [actionError, setActionError] = useState<string | null>(null)
   // Bumped on every cancel/new-dialog-open so a confirm's continuation can
@@ -103,7 +103,7 @@ export function StoryActionMenu({ story, onMoveToZone }: StoryActionMenuProps) {
       if (confirmDialog.action === 'move') {
         await onMoveToZone('planner')
       } else if (confirmDialog.action === 'archive') {
-        await onMoveToZone('archive', resolution, reason)
+        await onMoveToZone('archive', resolution, note)
       } else if (confirmDialog.action === 'unarchive') {
         await onMoveToZone('backlog')
       }
@@ -111,7 +111,7 @@ export function StoryActionMenu({ story, onMoveToZone }: StoryActionMenuProps) {
       setConfirmDialog(null)
       scheduleUnmount()
       setResolution('Done')
-      setReason('')
+      setNote('')
       setActionError(null)
     } catch (err) {
       if (sessionTokenRef.current !== token) return
@@ -129,7 +129,7 @@ export function StoryActionMenu({ story, onMoveToZone }: StoryActionMenuProps) {
     setConfirmDialog(null)
     scheduleUnmount()
     setResolution('Done')
-    setReason('')
+    setNote('')
     setActionError(null)
     setSubmitting(false)
   }
@@ -159,13 +159,13 @@ export function StoryActionMenu({ story, onMoveToZone }: StoryActionMenuProps) {
           </select>
         </div>
         <div>
-          <label htmlFor="reason-textarea" className="text-xs font-semibold uppercase text-neutral-600 dark:text-neutral-400">
-            Reason (optional)
+          <label htmlFor="note-textarea" className="text-xs font-semibold uppercase text-neutral-600 dark:text-neutral-400">
+            Note (optional)
           </label>
           <textarea
-            id="reason-textarea"
-            value={reason}
-            onChange={(e) => setReason(e.target.value)}
+            id="note-textarea"
+            value={note}
+            onChange={(e) => setNote(e.target.value)}
             placeholder="Why are you archiving this?"
             className="mt-1 w-full rounded border border-neutral-300 dark:border-neutral-700 bg-white dark:bg-neutral-800 px-3 py-2 text-sm text-neutral-900 dark:text-neutral-100 placeholder-neutral-500 dark:placeholder-neutral-500"
             rows={3}

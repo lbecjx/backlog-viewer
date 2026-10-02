@@ -7,7 +7,7 @@
 | **Priority** | High |
 | **Status** | In Progress |
 | **Resolution** |  |
-| **Note** |  |
+| **Note** | Waiting on design review |
 | **Labels** | auth, backend, security |
 | **Created** | 2026-08-10 |
 | **Updated** | 2026-08-20 |

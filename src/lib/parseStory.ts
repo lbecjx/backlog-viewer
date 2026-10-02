@@ -15,6 +15,11 @@ export interface ParsedStory {
   // closed, `''` for a present-but-empty row, `undefined` when the row is
   // absent (every story written before the field existed).
   resolution: string | undefined
+  // The story file's `| **Note** |` row: the most recent status change's
+  // note, `''` for a present-but-empty row, `undefined` when the row is
+  // absent (every story written before the field existed). Same tri-state
+  // shape as `resolution` above.
+  note: string | undefined
   labels: string[]
   created: string | undefined
   updated: string | undefined
@@ -82,6 +87,7 @@ export function parseStory(raw: string, filename: string): ParsedStory {
     priority: field(fields, 'Priority') || DEFAULTS.priority,
     status: field(fields, 'Status') || DEFAULTS.status,
     resolution: field(fields, 'Resolution'),
+    note: field(fields, 'Note'),
     labels: parseLabels(fields.get('Labels')),
     created: field(fields, 'Created'),
     updated: field(fields, 'Updated'),

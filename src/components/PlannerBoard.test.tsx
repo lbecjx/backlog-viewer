@@ -28,6 +28,7 @@ function makeStory(overrides: Partial<BacklogStory>): BacklogStory {
     priority: 'Medium',
     status: 'Not Started',
     resolution: undefined,
+    note: undefined,
     labels: [],
     created: '2026-08-01',
     updated: '2026-08-01',
@@ -175,7 +176,8 @@ describe('PlannerBoard', () => {
   })
 
   describe('drag and drop', () => {
-    it('calls onStatusChange with the target column status when a card is dropped on it', () => {
+    it('opens a note dialog on drop, and calls onStatusChange with no note when left blank', async () => {
+      const user = userEvent.setup()
       const onStatusChange = vi.fn().mockResolvedValue(undefined)
       const stories = [makeStory({ code: 'MOCK-0001', title: 'Card to drag', status: 'Not Started' })]
       render(<PlannerBoard stories={stories} selectedCode={null} onSelect={vi.fn()} onStatusChange={onStatusChange} />)
@@ -185,10 +187,165 @@ describe('PlannerBoard', () => {
       fireEvent.dragOver(target)
       fireEvent.drop(target)
 
-      expect(onStatusChange).toHaveBeenCalledWith('MOCK-0001', 'In Progress')
+      expect(onStatusChange).not.toHaveBeenCalled() // gated behind the dialog
+      expect(screen.getByRole('dialog')).toHaveTextContent('Move to In Progress?')
+
+      await user.click(screen.getByRole('button', { name: 'Move' }))
+
+      expect(onStatusChange).toHaveBeenCalledWith('MOCK-0001', 'In Progress', undefined)
     })
 
-    it('does not call onStatusChange when a card is dropped back on its own column', () => {
+    it('calls onStatusChange with the note when one is typed before confirming', async () => {
+      const user = userEvent.setup()
+      const onStatusChange = vi.fn().mockResolvedValue(undefined)
+      const stories = [makeStory({ code: 'MOCK-0001', title: 'Card to drag', status: 'Not Started' })]
+      render(<PlannerBoard stories={stories} selectedCode={null} onSelect={vi.fn()} onStatusChange={onStatusChange} />)
+
+      dragStart(screen.getByText('Card to drag').closest('[role="button"]')!)
+      const target = getColumnDropTarget('In Progress')
+      fireEvent.dragOver(target)
+      fireEvent.drop(target)
+
+      await user.type(screen.getByLabelText('Note (optional)'), 'Picked this up today')
+      await user.click(screen.getByRole('button', { name: 'Move' }))
+
+      expect(onStatusChange).toHaveBeenCalledWith('MOCK-0001', 'In Progress', 'Picked this up today')
+    })
+
+    it('trims and collapses newlines in the note before sending it', async () => {
+      const user = userEvent.setup()
+      const onStatusChange = vi.fn().mockResolvedValue(undefined)
+      const stories = [makeStory({ code: 'MOCK-0001', title: 'Card to drag', status: 'Not Started' })]
+      render(<PlannerBoard stories={stories} selectedCode={null} onSelect={vi.fn()} onStatusChange={onStatusChange} />)
+
+      dragStart(screen.getByText('Card to drag').closest('[role="button"]')!)
+      const target = getColumnDropTarget('In Progress')
+      fireEvent.dragOver(target)
+      fireEvent.drop(target)
+
+      await user.type(screen.getByLabelText('Note (optional)'), '  line one\nline two  ')
+      await user.click(screen.getByRole('button', { name: 'Move' }))
+
+      expect(onStatusChange).toHaveBeenCalledWith('MOCK-0001', 'In Progress', 'line one line two')
+    })
+
+    it('sends no note when the field is left whitespace-only', async () => {
+      const user = userEvent.setup()
+      const onStatusChange = vi.fn().mockResolvedValue(undefined)
+      const stories = [makeStory({ code: 'MOCK-0001', title: 'Card to drag', status: 'Not Started' })]
+      render(<PlannerBoard stories={stories} selectedCode={null} onSelect={vi.fn()} onStatusChange={onStatusChange} />)
+
+      dragStart(screen.getByText('Card to drag').closest('[role="button"]')!)
+      const target = getColumnDropTarget('In Progress')
+      fireEvent.dragOver(target)
+      fireEvent.drop(target)
+
+      await user.type(screen.getByLabelText('Note (optional)'), '   ')
+      await user.click(screen.getByRole('button', { name: 'Move' }))
+
+      expect(onStatusChange).toHaveBeenCalledWith('MOCK-0001', 'In Progress', undefined)
+    })
+
+    // Reproduces a race found by adversarial review: cancelling a drop whose
+    // confirm request is still in flight, then opening a SECOND drop before
+    // the first request settles, must not let the stale first request close
+    // the second dialog or wipe its note once it finally resolves.
+    it('does not let a stale in-flight confirm close a later dialog or wipe its note', async () => {
+      const user = userEvent.setup()
+      let resolveFirst: (() => void) | undefined
+      const onStatusChange = vi.fn(
+        () =>
+          new Promise<void>((resolve) => {
+            resolveFirst = resolve
+          }),
+      )
+      const stories = [
+        makeStory({ code: 'MOCK-0001', title: 'First card', status: 'Not Started' }),
+        makeStory({ code: 'MOCK-0002', title: 'Second card', status: 'Not Started' }),
+      ]
+      render(<PlannerBoard stories={stories} selectedCode={null} onSelect={vi.fn()} onStatusChange={onStatusChange} />)
+
+      // Drop the first card and confirm — its request is now parked, pending.
+      dragStart(screen.getByText('First card').closest('[role="button"]')!)
+      fireEvent.dragOver(getColumnDropTarget('In Progress'))
+      fireEvent.drop(getColumnDropTarget('In Progress'))
+      await user.click(screen.getByRole('button', { name: 'Move' }))
+      expect(onStatusChange).toHaveBeenCalledTimes(1)
+
+      // Cancel it while the request is still in flight, then open a second
+      // dialog for a different card and start typing a note.
+      await user.click(screen.getByRole('button', { name: 'Cancel' }))
+      dragStart(screen.getByText('Second card').closest('[role="button"]')!)
+      fireEvent.dragOver(getColumnDropTarget('Done'))
+      fireEvent.drop(getColumnDropTarget('Done'))
+      expect(screen.getByRole('dialog')).toHaveTextContent('Move to Done?')
+      await user.type(screen.getByLabelText('Note (optional)'), 'second note')
+
+      // The first (cancelled) request finally settles.
+      resolveFirst?.()
+      await Promise.resolve()
+      await Promise.resolve()
+
+      // The second dialog must still be open, with its note intact, and
+      // onStatusChange must not have been called a second time on its own.
+      expect(onStatusChange).toHaveBeenCalledTimes(1)
+      expect(screen.getByRole('dialog')).toHaveTextContent('Move to Done?')
+      expect(screen.getByLabelText('Note (optional)')).toHaveValue('second note')
+
+      // The second dialog's own Move button must still be usable — cancelling
+      // the first one mid-flight must not have left it permanently disabled.
+      expect(screen.getByRole('button', { name: 'Move' })).not.toBeDisabled()
+    })
+
+    // A second bug found reviewing the fix above: cancelling a dialog while
+    // its own confirm request is still in flight must not leave the "in
+    // flight" flag stuck true, which would permanently disable every later
+    // dialog's Move button.
+    it('does not leave the Move button disabled after cancelling mid-flight', async () => {
+      const user = userEvent.setup()
+      let resolveFirst: (() => void) | undefined
+      const onStatusChange = vi.fn(
+        () =>
+          new Promise<void>((resolve) => {
+            resolveFirst = resolve
+          }),
+      )
+      const stories = [makeStory({ code: 'MOCK-0001', title: 'Card to drag', status: 'Not Started' })]
+      render(<PlannerBoard stories={stories} selectedCode={null} onSelect={vi.fn()} onStatusChange={onStatusChange} />)
+
+      dragStart(screen.getByText('Card to drag').closest('[role="button"]')!)
+      fireEvent.dragOver(getColumnDropTarget('In Progress'))
+      fireEvent.drop(getColumnDropTarget('In Progress'))
+      await user.click(screen.getByRole('button', { name: 'Move' }))
+      await user.click(screen.getByRole('button', { name: 'Cancel' }))
+
+      // Open a fresh dialog for the same card — its Move button must be
+      // enabled even though the first request never settled.
+      dragStart(screen.getByText('Card to drag').closest('[role="button"]')!)
+      fireEvent.dragOver(getColumnDropTarget('Done'))
+      fireEvent.drop(getColumnDropTarget('Done'))
+      expect(screen.getByRole('button', { name: 'Move' })).not.toBeDisabled()
+
+      resolveFirst?.() // let the abandoned first request settle, harmlessly
+    })
+
+    it('does not call onStatusChange when the note dialog is cancelled', async () => {
+      const user = userEvent.setup()
+      const onStatusChange = vi.fn().mockResolvedValue(undefined)
+      const stories = [makeStory({ code: 'MOCK-0001', title: 'Card to drag', status: 'Not Started' })]
+      render(<PlannerBoard stories={stories} selectedCode={null} onSelect={vi.fn()} onStatusChange={onStatusChange} />)
+
+      dragStart(screen.getByText('Card to drag').closest('[role="button"]')!)
+      const target = getColumnDropTarget('In Progress')
+      fireEvent.dragOver(target)
+      fireEvent.drop(target)
+
+      await user.click(screen.getByRole('button', { name: 'Cancel' }))
+
+      expect(onStatusChange).not.toHaveBeenCalled()
+    })
+
+    it('does not open a dialog when a card is dropped back on its own column', () => {
       const onStatusChange = vi.fn().mockResolvedValue(undefined)
       const stories = [makeStory({ code: 'MOCK-0001', title: 'Card to drag', status: 'Not Started' })]
       render(<PlannerBoard stories={stories} selectedCode={null} onSelect={vi.fn()} onStatusChange={onStatusChange} />)
@@ -198,6 +355,7 @@ describe('PlannerBoard', () => {
       fireEvent.dragOver(target)
       fireEvent.drop(target)
 
+      expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
       expect(onStatusChange).not.toHaveBeenCalled()
     })
 
@@ -214,6 +372,7 @@ describe('PlannerBoard', () => {
       fireEvent.dragOver(otherColumn)
       fireEvent.drop(otherColumn)
 
+      expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
       expect(onStatusChange).not.toHaveBeenCalled()
     })
 
@@ -231,6 +390,7 @@ describe('PlannerBoard', () => {
       const target = getColumnDropTarget('In Progress')
       fireEvent.dragOver(target)
       fireEvent.drop(target)
+      await user.click(screen.getByRole('button', { name: 'Move' }))
 
       expect(await screen.findByText(/Couldn't update status: network down/)).toBeInTheDocument()
 
@@ -238,7 +398,8 @@ describe('PlannerBoard', () => {
       expect(screen.queryByText(/Couldn't update status/)).not.toBeInTheDocument()
     })
 
-    it('lets a card from the "Other" column be dragged into a real status column', () => {
+    it('lets a card from the "Other" column be dragged into a real status column', async () => {
+      const user = userEvent.setup()
       const onStatusChange = vi.fn().mockResolvedValue(undefined)
       const stories = [makeStory({ code: 'MOCK-0002', title: 'Uncategorized card', status: 'Weird Custom Status' })]
       render(<PlannerBoard stories={stories} selectedCode={null} onSelect={vi.fn()} onStatusChange={onStatusChange} />)
@@ -247,8 +408,9 @@ describe('PlannerBoard', () => {
       const target = getColumnDropTarget('In Progress')
       fireEvent.dragOver(target)
       fireEvent.drop(target)
+      await user.click(screen.getByRole('button', { name: 'Move' }))
 
-      expect(onStatusChange).toHaveBeenCalledWith('MOCK-0002', 'In Progress')
+      expect(onStatusChange).toHaveBeenCalledWith('MOCK-0002', 'In Progress', undefined)
     })
   })
 })

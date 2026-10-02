@@ -11,6 +11,7 @@ const STORY: BacklogStory = {
   priority: 'High',
   status: 'In Progress',
   resolution: undefined,
+  note: undefined,
   labels: ['auth'],
   created: '2026-08-10',
   updated: '2026-08-20',
@@ -36,6 +37,24 @@ describe('StoryDetailDrawer', () => {
     render(<StoryDetailDrawer story={STORY} onClose={vi.fn()} />)
     expect(screen.getByText('Created')).toBeInTheDocument()
     expect(screen.getByText('Updated')).toBeInTheDocument()
+  })
+
+  // Found via manual QA: this drawer is a separate component from
+  // StoryDetail.tsx (used by Backlog/Archive) — the Planner uses this one,
+  // and it has its own metadata fields that don't automatically pick up a
+  // change made to the other component.
+  it('shows Resolution and Note when both are present', () => {
+    render(<StoryDetailDrawer story={{ ...STORY, resolution: 'Done', note: 'Shipped ahead of schedule' }} onClose={vi.fn()} />)
+    expect(screen.getByText('Resolution')).toBeInTheDocument()
+    expect(screen.getByText('Done')).toBeInTheDocument()
+    expect(screen.getByText('Note')).toBeInTheDocument()
+    expect(screen.getByText('Shipped ahead of schedule')).toBeInTheDocument()
+  })
+
+  it('does not render Resolution or Note when both are absent', () => {
+    render(<StoryDetailDrawer story={{ ...STORY, resolution: undefined, note: undefined }} onClose={vi.fn()} />)
+    expect(screen.queryByText('Resolution')).not.toBeInTheDocument()
+    expect(screen.queryByText('Note')).not.toBeInTheDocument()
   })
 
   it('shows an Acceptance Criteria progress summary and bar width matching the story progress', () => {

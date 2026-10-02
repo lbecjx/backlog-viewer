@@ -52,6 +52,21 @@ describe('parseStory', () => {
     expect(parseStory(raw, 'MOCK-0004-story-malformed-table.md').resolution).toBeUndefined()
   })
 
+  it('reads the Note row when the story has one (MOCK-0002)', async () => {
+    const raw = await fetchStoryRaw(BASE_URL, 'MOCK-0002-story-in-progress.md')
+    expect(parseStory(raw, 'MOCK-0002-story-in-progress.md').note).toBe('Waiting on design review')
+  })
+
+  it('treats a present-but-empty Note row as no note (MOCK-0003)', async () => {
+    const raw = await fetchStoryRaw(BASE_URL, 'MOCK-0003-story-multiline-lists.md')
+    expect(parseStory(raw, 'MOCK-0003-story-multiline-lists.md').note).toBe('')
+  })
+
+  it('treats an absent Note row as no note (MOCK-0004)', async () => {
+    const raw = await fetchStoryRaw(BASE_URL, 'MOCK-0004-story-malformed-table.md')
+    expect(parseStory(raw, 'MOCK-0004-story-malformed-table.md').note).toBeUndefined()
+  })
+
   it('preserves multi-line list content in the body verbatim, unmodified (MOCK-0003)', async () => {
     const raw = await fetchStoryRaw(BASE_URL, 'MOCK-0003-story-multiline-lists.md')
     const story = parseStory(raw, 'MOCK-0003-story-multiline-lists.md')
