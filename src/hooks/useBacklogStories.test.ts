@@ -42,6 +42,7 @@ function makeMockFetch(statusEndpointOk: boolean = true, boardEndpointOk: boolea
   return (input: RequestInfo | URL) => {
     const href = input.toString()
     if (href.endsWith('/status-colors.json')) return notFound()
+    if (href.endsWith('/project.json')) return notFound()
     if (href.endsWith('.backlog-statuses.json')) return notFound()
     if (href.endsWith('.backlog-board.json')) return notFound()
     if (href.endsWith('/local-backlog/')) return okHtml('<a href="MOCK-0001-a-story.md">MOCK-0001-a-story.md</a>')
@@ -83,6 +84,7 @@ describe('useBacklogStories', () => {
       const fetchMock = vi.fn((input: RequestInfo | URL, init?: RequestInit) => {
         const href = input.toString()
         if (href.endsWith('/status-colors.json')) return notFound()
+        if (href.endsWith('/project.json')) return notFound()
         if (href.endsWith('.backlog-statuses.json')) return notFound()
         if (href.endsWith('.backlog-board.json')) return notFound()
         if (href.endsWith('/local-backlog/')) return okHtml('<a href="MOCK-0001-a-story.md">MOCK-0001-a-story.md</a>')
@@ -130,6 +132,7 @@ describe('useBacklogStories', () => {
       const fetchMock = vi.fn((input: RequestInfo | URL) => {
         const href = input.toString()
         if (href.endsWith('/status-colors.json')) return notFound()
+        if (href.endsWith('/project.json')) return notFound()
         if (href.endsWith('.backlog-statuses.json')) return notFound()
         if (href.endsWith('.backlog-board.json')) return notFound()
         if (href.endsWith('/local-backlog/')) return okHtml('<a href="MOCK-0001-a-story.md">MOCK-0001-a-story.md</a>')
@@ -346,6 +349,7 @@ describe('useBacklogStories', () => {
       const fetchMock = vi.fn((input: RequestInfo | URL) => {
         const href = input.toString()
         if (href.endsWith('/status-colors.json')) return notFound()
+        if (href.endsWith('/project.json')) return notFound()
         if (href.endsWith('.backlog-statuses.json')) return notFound()
         if (href.endsWith('.backlog-board.json')) return notFound()
         if (href.endsWith('/local-backlog/')) return okHtml('<a href="MOCK-0001-a-story.md">MOCK-0001-a-story.md</a>')
@@ -399,6 +403,7 @@ describe('useBacklogStories', () => {
       const fetchMock = vi.fn((input: RequestInfo | URL) => {
         const href = input.toString()
         if (href.endsWith('/status-colors.json')) return notFound()
+        if (href.endsWith('/project.json')) return notFound()
         if (href.endsWith('.backlog-statuses.json')) return notFound()
         if (href.endsWith('.backlog-board.json')) return notFound()
         if (href.endsWith('/local-backlog/')) return okHtml('<a href="MOCK-0001-a-story.md">MOCK-0001-a-story.md</a>')
@@ -467,6 +472,7 @@ describe('useBacklogStories', () => {
       const fetchMock = vi.fn((input: RequestInfo | URL) => {
         const href = input.toString()
         if (href.endsWith('/status-colors.json')) return notFound()
+        if (href.endsWith('/project.json')) return notFound()
         if (href.endsWith('.backlog-statuses.json')) return notFound()
         if (href.endsWith('.backlog-board.json')) return notFound()
         if (href.endsWith('/local-backlog/')) return okHtml('<a href="MOCK-0001-a-story.md">MOCK-0001-a-story.md</a>')
@@ -524,6 +530,7 @@ describe('useBacklogStories', () => {
       const fetchMock = vi.fn((input: RequestInfo | URL) => {
         const href = input.toString()
         if (href.endsWith('/status-colors.json')) return notFound()
+        if (href.endsWith('/project.json')) return notFound()
         if (href.endsWith('.backlog-statuses.json')) return notFound()
         if (href.endsWith('.backlog-board.json')) return notFound()
         if (href.endsWith('/local-backlog/')) return okHtml('<a href="MOCK-0001-a-story.md">MOCK-0001-a-story.md</a>')
@@ -560,6 +567,7 @@ describe('useBacklogStories', () => {
       const fetchMock = vi.fn((input: RequestInfo | URL) => {
         const href = input.toString()
         if (href.endsWith('/status-colors.json')) return notFound()
+        if (href.endsWith('/project.json')) return notFound()
         if (href.endsWith('.backlog-statuses.json')) return notFound()
         if (href.endsWith('.backlog-board.json')) return notFound()
         if (href.endsWith('/local-backlog/')) return okHtml('<a href="MOCK-0001-a-story.md">MOCK-0001-a-story.md</a>')
@@ -596,6 +604,7 @@ describe('useBacklogStories', () => {
         vi.fn((input: RequestInfo | URL) => {
           const href = input.toString()
           if (href.endsWith('/status-colors.json')) return notFound()
+          if (href.endsWith('/project.json')) return notFound()
           if (href.endsWith('.backlog-statuses.json')) return notFound()
           if (href.endsWith('.backlog-board.json')) {
             return Promise.resolve({
@@ -614,6 +623,39 @@ describe('useBacklogStories', () => {
 
       expect(result.current.stories[0].zone).toBe('archive')
       expect(result.current.stories.filter((s) => s.zone === 'backlog')).toHaveLength(0)
+    })
+  })
+
+  describe('projectName', () => {
+    it('exposes the fetched project name', async () => {
+      vi.stubGlobal(
+        'fetch',
+        vi.fn((input: RequestInfo | URL) => {
+          const href = input.toString()
+          if (href.endsWith('/status-colors.json')) return notFound()
+          if (href.endsWith('/project.json'))
+            return Promise.resolve({ ok: true, json: () => Promise.resolve({ name: 'backlog-viewer' }) })
+          if (href.endsWith('.backlog-statuses.json')) return notFound()
+          if (href.endsWith('.backlog-board.json')) return notFound()
+          if (href.endsWith('/local-backlog/')) return okHtml('<a href="MOCK-0001-a-story.md">MOCK-0001-a-story.md</a>')
+          if (href.endsWith('MOCK-0001-a-story.md')) return okText(RAW_STORY)
+          throw new Error(`unexpected fetch in test: ${href}`)
+        }),
+      )
+
+      const { result } = renderHook(() => useBacklogStories())
+      await waitFor(() => expect(result.current.loading).toBe(false))
+
+      expect(result.current.projectName).toBe('backlog-viewer')
+    })
+
+    it('exposes null when project.json is missing (older plugin version)', async () => {
+      vi.stubGlobal('fetch', vi.fn(makeMockFetch(true)))
+
+      const { result } = renderHook(() => useBacklogStories())
+      await waitFor(() => expect(result.current.loading).toBe(false))
+
+      expect(result.current.projectName).toBeNull()
     })
   })
 })

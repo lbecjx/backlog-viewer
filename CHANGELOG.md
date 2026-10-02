@@ -4,6 +4,13 @@ All notable changes to this project are documented here. Format loosely follows
 [Keep a Changelog](https://keepachangelog.com/), versioning follows
 [Semantic Versioning](https://semver.org/).
 
+## 0.5.0
+
+- The header now shows the current project's name, centered, so multiple
+  open viewers (one per project, each on its own port) can be told apart at
+  a glance. Requires a `local-backlog` plugin version that writes
+  `project.json`; an older version simply shows nothing extra.
+
 ## 0.4.0
 
 - Any status change made in the Planner (dragging a card between columns) can

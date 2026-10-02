@@ -5,6 +5,7 @@ import { computeAcProgress, type AcProgress } from '../lib/computeAcProgress'
 import { computeZone, type Zone } from '../lib/computeZone'
 import { discoverStories } from '../lib/discoverStories'
 import { parseStory, type ParsedStory } from '../lib/parseStory'
+import { fetchProjectName } from '../lib/projectInfo'
 import { sortStoriesNewestFirst } from '../lib/sortStories'
 import { configureStatusColors, loadStatusPalette } from '../lib/statusColor'
 
@@ -17,6 +18,12 @@ interface UseBacklogStoriesResult {
   stories: BacklogStory[]
   loading: boolean
   error: string | null
+  // The current project's name, shown centered in the header so multiple
+  // open viewers (one per project, each on its own port) can be told apart
+  // at a glance. `null` when `project.json` is missing, unreachable, or
+  // malformed (an older plugin version, or none at all) — the header
+  // degrades to showing nothing extra rather than an error.
+  projectName: string | null
   // Optimistic: updates local state immediately, then persists to the
   // server. On failure, reverts the local change and rethrows — the caller
   // (a drag-and-drop drop handler) decides how to surface that to the human,
@@ -50,6 +57,7 @@ export function useBacklogStories(): UseBacklogStoriesResult {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [actionError, setActionError] = useState<string | null>(null)
+  const [projectName, setProjectName] = useState<string | null>(null)
 
   // Per-story, per-field monotonic write counter. The optimistic-revert guard
   // cannot compare the *value* a call wrote: two different calls can target
@@ -80,16 +88,23 @@ export function useBacklogStories(): UseBacklogStoriesResult {
     let cancelled = false
     const baseUrl = getBacklogBaseUrl()
 
-    // All four resolve independently — none depends on another's result — a
+    // All five resolve independently — none depends on another's result — a
     // project with none of these files gets configureStatusColors's own
-    // defaults and every story defaulting to the Backlog zone (each config
-    // fetch resolves to "nothing found" rather than rejecting; see
-    // backlogConfig.ts and statusColor.ts). `discoverStories` is itself
-    // partial-tolerant now (it retries a transient per-story failure, then
-    // skips it), so this catch is reserved for genuine failures — most notably
-    // the directory listing itself, where zero stories is a real error.
-    Promise.all([loadStatusPalette(), fetchBacklogStatuses(baseUrl), fetchBoardMembership(baseUrl), discoverStories(baseUrl)])
-      .then(([palette, statuses, membership, discovered]) => {
+    // defaults, every story defaulting to the Backlog zone, and no project
+    // name shown (each config fetch resolves to "nothing found" rather than
+    // rejecting; see backlogConfig.ts, statusColor.ts, and projectInfo.ts).
+    // `discoverStories` is itself partial-tolerant now (it retries a
+    // transient per-story failure, then skips it), so this catch is reserved
+    // for genuine failures — most notably the directory listing itself,
+    // where zero stories is a real error.
+    Promise.all([
+      loadStatusPalette(),
+      fetchBacklogStatuses(baseUrl),
+      fetchBoardMembership(baseUrl),
+      discoverStories(baseUrl),
+      fetchProjectName(),
+    ])
+      .then(([palette, statuses, membership, discovered, name]) => {
         if (cancelled) return
         configureStatusColors(palette, statuses.statuses)
         const parsed = discovered.map(({ filename, raw }) => {
@@ -100,6 +115,7 @@ export function useBacklogStories(): UseBacklogStoriesResult {
         // discoverStories itself returns filenames in — that function's own
         // job is just finding what exists, not deciding how it's shown.
         setStories(sortStoriesNewestFirst(parsed))
+        setProjectName(name)
       })
       .catch((err: unknown) => {
         if (cancelled) return
@@ -193,5 +209,5 @@ export function useBacklogStories(): UseBacklogStoriesResult {
     }
   }
 
-  return { stories, loading, error, updateStoryStatus, moveStoryToZone, actionError, clearActionError }
+  return { stories, loading, error, projectName, updateStoryStatus, moveStoryToZone, actionError, clearActionError }
 }
