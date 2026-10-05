@@ -1,6 +1,6 @@
 import { useEffect, useState, type ReactNode } from 'react'
 import type { BacklogStory } from '../hooks/useBacklogStories'
-import type { Zone } from '../lib/computeZone'
+import type { Zone } from '../lib/parseStory'
 import { formatFriendlyDate } from '../lib/formatDateTime'
 import { getStatusColorClasses } from '../lib/statusColor'
 import { getTypeColorClasses, getTypeIcon } from '../lib/typeColor'

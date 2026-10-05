@@ -6,7 +6,7 @@ import { StoryDetailDrawer } from './components/StoryDetailDrawer'
 import { StoryList } from './components/StoryList'
 import { TabBar } from './components/TabBar'
 import { useBacklogStories } from './hooks/useBacklogStories'
-import type { Zone } from './lib/computeZone'
+import type { Zone } from './lib/parseStory'
 import { tabId, tabPanelId } from './lib/tabIds'
 
 export default function App() {

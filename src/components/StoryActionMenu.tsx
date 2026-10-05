@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState, type ReactNode } from 'react'
 import type { BacklogStory } from '../hooks/useBacklogStories'
-import type { Zone } from '../lib/computeZone'
+import type { Zone } from '../lib/parseStory'
 import { ConfirmDialog } from './ConfirmDialog'
 
 // One entry per action, keyed by the dialog's `action`. A single ConfirmDialog

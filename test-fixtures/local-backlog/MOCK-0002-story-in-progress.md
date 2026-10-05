@@ -8,6 +8,7 @@
 | **Status** | In Progress |
 | **Resolution** |  |
 | **Note** | Waiting on design review |
+| **Zone** | Planner |
 | **Labels** | auth, backend, security |
 | **Created** | 2026-08-10 |
 | **Updated** | 2026-08-20 |

@@ -1,6 +1,6 @@
 import type { DragEvent, KeyboardEvent } from 'react'
 import type { BacklogStory } from '../hooks/useBacklogStories'
-import type { Zone } from '../lib/computeZone'
+import type { Zone } from '../lib/parseStory'
 import { getStatusAccentBorderClass, getStatusColorClasses } from '../lib/statusColor'
 import { getTypeColorClasses, getTypeIcon } from '../lib/typeColor'
 import { LabelBadge } from './LabelBadge'

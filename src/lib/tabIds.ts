@@ -1,4 +1,4 @@
-import type { Zone } from './computeZone'
+import type { Zone } from './parseStory'
 
 // A tab's id/panel-id pair, shared with the `role="tabpanel"` element the
 // active tab controls (see App.tsx) — required by the WAI-ARIA Tabs pattern

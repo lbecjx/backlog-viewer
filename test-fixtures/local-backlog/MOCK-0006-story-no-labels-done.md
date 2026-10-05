@@ -8,6 +8,7 @@
 | **Status** | Done |
 | **Resolution** | Done |
 | **Note** |  |
+| **Zone** | Backlog |
 | **Created** | 2026-08-25 |
 | **Updated** | 2026-08-26 |
 

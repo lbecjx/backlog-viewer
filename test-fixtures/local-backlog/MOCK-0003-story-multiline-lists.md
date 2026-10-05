@@ -8,6 +8,7 @@
 | **Status** | Not Started |
 | **Resolution** |  |
 | **Note** |  |
+| **Zone** | Backlog |
 | **Labels** | checkout, ui, conversion |
 | **Created** | 2026-08-15 |
 | **Updated** | 2026-08-15 |

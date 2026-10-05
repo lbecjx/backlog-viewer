@@ -67,6 +67,36 @@ describe('parseStory', () => {
     expect(parseStory(raw, 'MOCK-0004-story-malformed-table.md').note).toBeUndefined()
   })
 
+  it("reads the Zone row, normalized to the viewer's lowercase (MOCK-0001 archive, MOCK-0002 planner)", async () => {
+    const archived = await fetchStoryRaw(BASE_URL, 'MOCK-0001-story-done-normal.md')
+    expect(parseStory(archived, 'MOCK-0001-story-done-normal.md').zone).toBe('archive')
+
+    const planned = await fetchStoryRaw(BASE_URL, 'MOCK-0002-story-in-progress.md')
+    expect(parseStory(planned, 'MOCK-0002-story-in-progress.md').zone).toBe('planner')
+  })
+
+  it('defaults Zone to backlog when the row is absent (MOCK-0004)', async () => {
+    const raw = await fetchStoryRaw(BASE_URL, 'MOCK-0004-story-malformed-table.md')
+    expect(parseStory(raw, 'MOCK-0004-story-malformed-table.md').zone).toBe('backlog')
+  })
+
+  it('defaults Zone to backlog for a present-but-unrecognized value', () => {
+    const raw = [
+      '# NB-0010 · Unknown zone',
+      '',
+      '| Field | Value |',
+      '|---|---|',
+      '| **Code** | NB-0010 |',
+      '| **Zone** | Somewhere Else |',
+      '',
+      '---',
+      '',
+      '## Description',
+      'x',
+    ].join('\n')
+    expect(parseStory(raw, 'NB-0010-unknown-zone.md').zone).toBe('backlog')
+  })
+
   it('preserves multi-line list content in the body verbatim, unmodified (MOCK-0003)', async () => {
     const raw = await fetchStoryRaw(BASE_URL, 'MOCK-0003-story-multiline-lists.md')
     const story = parseStory(raw, 'MOCK-0003-story-multiline-lists.md')
