@@ -4,6 +4,14 @@ All notable changes to this project are documented here. Format loosely follows
 [Keep a Changelog](https://keepachangelog.com/), versioning follows
 [Semantic Versioning](https://semver.org/).
 
+## 0.6.0
+
+- A story's zone (Backlog / Planner / Archive) is now read from the story's own
+  `Zone` metadata field instead of `.backlog-board.json`, which the
+  `local-backlog` plugin (v1.10.0, `LB-0014`) retired.
+- Requires a plugin version that writes `Zone`. Zone changes still post to
+  `/api/board` with the same request shape.
+
 ## 0.5.0
 
 - The header now shows the current project's name, centered, so multiple

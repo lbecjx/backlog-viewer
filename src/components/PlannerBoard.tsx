@@ -1,7 +1,7 @@
 import { useMemo, useRef, useState, type DragEvent } from 'react'
 import type { BacklogStory } from '../hooks/useBacklogStories'
 import { getConfiguredStatuses } from '../lib/statusColor'
-import type { Zone } from '../lib/computeZone'
+import type { Zone } from '../lib/parseStory'
 import { ConfirmDialog } from './ConfirmDialog'
 import { StoryCard } from './StoryCard'
 

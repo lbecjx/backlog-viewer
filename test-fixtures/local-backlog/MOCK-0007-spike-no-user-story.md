@@ -8,6 +8,7 @@
 | **Status** | In Progress |
 | **Resolution** |  |
 | **Note** |  |
+| **Zone** | Backlog |
 | **Labels** | research, css |
 | **Created** | 2026-08-27 |
 | **Updated** | 2026-08-28 |

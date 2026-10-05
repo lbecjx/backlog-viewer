@@ -44,7 +44,6 @@ function makeMockFetch(statusEndpointOk: boolean = true, boardEndpointOk: boolea
     if (href.endsWith('/status-colors.json')) return notFound()
     if (href.endsWith('/project.json')) return notFound()
     if (href.endsWith('.backlog-statuses.json')) return notFound()
-    if (href.endsWith('.backlog-board.json')) return notFound()
     if (href.endsWith('/local-backlog/')) return okHtml('<a href="MOCK-0001-a-story.md">MOCK-0001-a-story.md</a>')
     if (href.endsWith('MOCK-0001-a-story.md')) return okText(RAW_STORY)
     if (href.endsWith('/api/status')) {
@@ -86,7 +85,6 @@ describe('useBacklogStories', () => {
         if (href.endsWith('/status-colors.json')) return notFound()
         if (href.endsWith('/project.json')) return notFound()
         if (href.endsWith('.backlog-statuses.json')) return notFound()
-        if (href.endsWith('.backlog-board.json')) return notFound()
         if (href.endsWith('/local-backlog/')) return okHtml('<a href="MOCK-0001-a-story.md">MOCK-0001-a-story.md</a>')
         if (href.endsWith('MOCK-0001-a-story.md')) return okText(RAW_STORY)
         if (href.endsWith('/api/status')) {
@@ -134,7 +132,6 @@ describe('useBacklogStories', () => {
         if (href.endsWith('/status-colors.json')) return notFound()
         if (href.endsWith('/project.json')) return notFound()
         if (href.endsWith('.backlog-statuses.json')) return notFound()
-        if (href.endsWith('.backlog-board.json')) return notFound()
         if (href.endsWith('/local-backlog/')) return okHtml('<a href="MOCK-0001-a-story.md">MOCK-0001-a-story.md</a>')
         if (href.endsWith('MOCK-0001-a-story.md')) return okText(RAW_STORY)
         if (href.endsWith('/api/status')) {
@@ -351,7 +348,6 @@ describe('useBacklogStories', () => {
         if (href.endsWith('/status-colors.json')) return notFound()
         if (href.endsWith('/project.json')) return notFound()
         if (href.endsWith('.backlog-statuses.json')) return notFound()
-        if (href.endsWith('.backlog-board.json')) return notFound()
         if (href.endsWith('/local-backlog/')) return okHtml('<a href="MOCK-0001-a-story.md">MOCK-0001-a-story.md</a>')
         if (href.endsWith('MOCK-0001-a-story.md')) return okText(RAW_STORY)
         if (href.endsWith('/api/board')) {
@@ -405,7 +401,6 @@ describe('useBacklogStories', () => {
         if (href.endsWith('/status-colors.json')) return notFound()
         if (href.endsWith('/project.json')) return notFound()
         if (href.endsWith('.backlog-statuses.json')) return notFound()
-        if (href.endsWith('.backlog-board.json')) return notFound()
         if (href.endsWith('/local-backlog/')) return okHtml('<a href="MOCK-0001-a-story.md">MOCK-0001-a-story.md</a>')
         if (href.endsWith('MOCK-0001-a-story.md')) return okText(RAW_STORY)
         if (href.endsWith('/api/board')) {
@@ -474,7 +469,6 @@ describe('useBacklogStories', () => {
         if (href.endsWith('/status-colors.json')) return notFound()
         if (href.endsWith('/project.json')) return notFound()
         if (href.endsWith('.backlog-statuses.json')) return notFound()
-        if (href.endsWith('.backlog-board.json')) return notFound()
         if (href.endsWith('/local-backlog/')) return okHtml('<a href="MOCK-0001-a-story.md">MOCK-0001-a-story.md</a>')
         if (href.endsWith('MOCK-0001-a-story.md')) return okText(RAW_STORY)
         if (href.endsWith('/api/status')) {
@@ -532,7 +526,6 @@ describe('useBacklogStories', () => {
         if (href.endsWith('/status-colors.json')) return notFound()
         if (href.endsWith('/project.json')) return notFound()
         if (href.endsWith('.backlog-statuses.json')) return notFound()
-        if (href.endsWith('.backlog-board.json')) return notFound()
         if (href.endsWith('/local-backlog/')) return okHtml('<a href="MOCK-0001-a-story.md">MOCK-0001-a-story.md</a>')
         if (href.endsWith('MOCK-0001-a-story.md')) return okText(RAW_STORY)
         if (href.endsWith('/api/board')) {
@@ -569,7 +562,6 @@ describe('useBacklogStories', () => {
         if (href.endsWith('/status-colors.json')) return notFound()
         if (href.endsWith('/project.json')) return notFound()
         if (href.endsWith('.backlog-statuses.json')) return notFound()
-        if (href.endsWith('.backlog-board.json')) return notFound()
         if (href.endsWith('/local-backlog/')) return okHtml('<a href="MOCK-0001-a-story.md">MOCK-0001-a-story.md</a>')
         if (href.endsWith('MOCK-0001-a-story.md')) return okText(RAW_STORY)
         if (href.endsWith('/api/board')) {
@@ -592,13 +584,15 @@ describe('useBacklogStories', () => {
     })
   })
 
-  describe('board membership (the archive regression)', () => {
+  describe('story Zone (the archive regression)', () => {
     it('resolves an archived story to the archive zone, so it does not show in Backlog', async () => {
-      // The live regression this story closes: the reader rejected real
-      // archive entries, so an archived story fell back to `backlog` and
-      // reappeared in the Backlog list. This drives the real membership file
-      // through the hook into `computeZone` — the reader-to-list path no
-      // other test covered.
+      // The story's own `| **Zone** |` row is the only source now (LB-0014) —
+      // an `Archive` story must not reappear in the Backlog list. This drives
+      // a story with a real `Zone` row through the hook into the list.
+      const archivedStory = RAW_STORY.replace(
+        '| **Status** | Not Started |',
+        '| **Status** | Not Started |\n| **Zone** | Archive |',
+      )
       vi.stubGlobal(
         'fetch',
         vi.fn((input: RequestInfo | URL) => {
@@ -606,14 +600,8 @@ describe('useBacklogStories', () => {
           if (href.endsWith('/status-colors.json')) return notFound()
           if (href.endsWith('/project.json')) return notFound()
           if (href.endsWith('.backlog-statuses.json')) return notFound()
-          if (href.endsWith('.backlog-board.json')) {
-            return Promise.resolve({
-              ok: true,
-              json: () => Promise.resolve({ planner: [], archive: ['MOCK-0001'] }),
-            })
-          }
           if (href.endsWith('/local-backlog/')) return okHtml('<a href="MOCK-0001-a-story.md">MOCK-0001-a-story.md</a>')
-          if (href.endsWith('MOCK-0001-a-story.md')) return okText(RAW_STORY)
+          if (href.endsWith('MOCK-0001-a-story.md')) return okText(archivedStory)
           throw new Error(`unexpected fetch in test: ${href}`)
         }),
       )
@@ -636,7 +624,6 @@ describe('useBacklogStories', () => {
           if (href.endsWith('/project.json'))
             return Promise.resolve({ ok: true, json: () => Promise.resolve({ name: 'backlog-viewer' }) })
           if (href.endsWith('.backlog-statuses.json')) return notFound()
-          if (href.endsWith('.backlog-board.json')) return notFound()
           if (href.endsWith('/local-backlog/')) return okHtml('<a href="MOCK-0001-a-story.md">MOCK-0001-a-story.md</a>')
           if (href.endsWith('MOCK-0001-a-story.md')) return okText(RAW_STORY)
           throw new Error(`unexpected fetch in test: ${href}`)

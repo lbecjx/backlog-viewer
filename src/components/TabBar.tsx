@@ -1,5 +1,5 @@
 import type { KeyboardEvent } from 'react'
-import type { Zone } from '../lib/computeZone'
+import type { Zone } from '../lib/parseStory'
 import { tabId, tabPanelId } from '../lib/tabIds'
 
 interface TabBarProps {

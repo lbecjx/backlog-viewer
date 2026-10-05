@@ -1,17 +1,15 @@
 import { useEffect, useRef, useState } from 'react'
-import { fetchBacklogStatuses, fetchBoardMembership } from '../lib/backlogConfig'
+import { fetchBacklogStatuses } from '../lib/backlogConfig'
 import { postStoryBoard, postStoryStatus } from '../lib/boardWrites'
 import { computeAcProgress, type AcProgress } from '../lib/computeAcProgress'
-import { computeZone, type Zone } from '../lib/computeZone'
 import { discoverStories } from '../lib/discoverStories'
-import { parseStory, type ParsedStory } from '../lib/parseStory'
+import { parseStory, type ParsedStory, type Zone } from '../lib/parseStory'
 import { fetchProjectName } from '../lib/projectInfo'
 import { sortStoriesNewestFirst } from '../lib/sortStories'
 import { configureStatusColors, loadStatusPalette } from '../lib/statusColor'
 
 export interface BacklogStory extends ParsedStory {
   progress: AcProgress | null
-  zone: Zone
 }
 
 interface UseBacklogStoriesResult {
@@ -88,28 +86,28 @@ export function useBacklogStories(): UseBacklogStoriesResult {
     let cancelled = false
     const baseUrl = getBacklogBaseUrl()
 
-    // All five resolve independently — none depends on another's result — a
+    // All four resolve independently — none depends on another's result — a
     // project with none of these files gets configureStatusColors's own
-    // defaults, every story defaulting to the Backlog zone, and no project
-    // name shown (each config fetch resolves to "nothing found" rather than
-    // rejecting; see backlogConfig.ts, statusColor.ts, and projectInfo.ts).
-    // `discoverStories` is itself partial-tolerant now (it retries a
-    // transient per-story failure, then skips it), so this catch is reserved
-    // for genuine failures — most notably the directory listing itself,
-    // where zero stories is a real error.
+    // defaults, every story with no `Zone` row defaulting to the Backlog
+    // zone (parseStory), and no project name shown (each config fetch
+    // resolves to "nothing found" rather than rejecting; see backlogConfig.ts,
+    // statusColor.ts, and projectInfo.ts). `discoverStories` is itself
+    // partial-tolerant now (it retries a transient per-story failure, then
+    // skips it), so this catch is reserved for genuine failures — most
+    // notably the directory listing itself, where zero stories is a real
+    // error.
     Promise.all([
       loadStatusPalette(),
       fetchBacklogStatuses(baseUrl),
-      fetchBoardMembership(baseUrl),
       discoverStories(baseUrl),
       fetchProjectName(),
     ])
-      .then(([palette, statuses, membership, discovered, name]) => {
+      .then(([palette, statuses, discovered, name]) => {
         if (cancelled) return
         configureStatusColors(palette, statuses.statuses)
         const parsed = discovered.map(({ filename, raw }) => {
           const story = parseStory(raw, filename)
-          return { ...story, progress: computeAcProgress(story.body), zone: computeZone(story.code, membership) }
+          return { ...story, progress: computeAcProgress(story.body) }
         })
         // Sorted here (display concern), independent of whatever order
         // discoverStories itself returns filenames in — that function's own

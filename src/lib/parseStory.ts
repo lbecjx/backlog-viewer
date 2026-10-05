@@ -5,6 +5,12 @@
 // docs/STORY_LOCAL_BACKLOG_VIEWER.md Section 5), not here. This module only
 // ever reads metadata; it never fixes or reinterprets the Markdown structure.
 
+// Which of Backlog/Planner/Archive a story sits in (LB-0014). Lowercase to
+// match the viewer's tab/action-menu comparisons; the story file stores the
+// canonical Title Case (`Backlog`/`Planner`/`Archive`), normalized by
+// `parseZone` below.
+export type Zone = 'backlog' | 'planner' | 'archive'
+
 export interface ParsedStory {
   code: string
   title: string
@@ -20,6 +26,12 @@ export interface ParsedStory {
   // absent (every story written before the field existed). Same tri-state
   // shape as `resolution` above.
   note: string | undefined
+  // The story file's `| **Zone** |` row, normalized to the lowercase `Zone`
+  // above. Unlike `resolution`/`note` there is no absent state: every story
+  // has exactly one zone, so a missing or unrecognized row falls back to
+  // `'backlog'` (a story that predates LB-0014, or a project that hasn't run
+  // its migration yet).
+  zone: Zone
   labels: string[]
   created: string | undefined
   updated: string | undefined
@@ -65,6 +77,14 @@ function parseLabels(raw: string | undefined): string[] {
     .filter((label) => label.length > 0)
 }
 
+// The story's `Zone` row is Title Case (`Backlog`); the viewer's `Zone` is
+// lowercase. Only `planner`/`archive` need naming — everything else, absent
+// row included, is `backlog`.
+function parseZone(raw: string | undefined): Zone {
+  const normalized = raw?.trim().toLowerCase()
+  return normalized === 'planner' || normalized === 'archive' ? normalized : 'backlog'
+}
+
 export function extractCodeFromFilename(filename: string): string {
   const match = filename.match(/^([A-Z]{2,6}-\d{4})/)
   return match ? match[1] : filename
@@ -88,6 +108,7 @@ export function parseStory(raw: string, filename: string): ParsedStory {
     status: field(fields, 'Status') || DEFAULTS.status,
     resolution: field(fields, 'Resolution'),
     note: field(fields, 'Note'),
+    zone: parseZone(field(fields, 'Zone')),
     labels: parseLabels(fields.get('Labels')),
     created: field(fields, 'Created'),
     updated: field(fields, 'Updated'),

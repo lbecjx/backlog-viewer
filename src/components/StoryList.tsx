@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react'
 import type { BacklogStory } from '../hooks/useBacklogStories'
-import type { Zone } from '../lib/computeZone'
+import type { Zone } from '../lib/parseStory'
 import { StatusChip } from './StatusChip'
 import { StoryCard } from './StoryCard'
 
